@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KisanSetu — Digital bridge between farmers and traders. Find the best trader and get a fair price for your crops.">
+  <title>KisanSetu — Find Best Trader. Get Fair Price.</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ═══ Landing Navigation ═══ -->
+  <nav class="landing-nav" id="landingNav">
+    <a href="index.html" class="nav-logo">🌾 Kisan<span>Setu</span></a>
+    <div class="nav-links" id="navLinks">
+      <a href="#how-it-works" class="nav-link" data-i18n="nav.howItWorks">How It Works</a>
+      <a href="#features" class="nav-link" data-i18n="nav.features">Features</a>
+      <a href="#benefits" class="nav-link" data-i18n="nav.benefits">Benefits</a>
+    </div>
+    <div class="nav-actions">
+      <div class="lang-selector">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="hi">हिं</button>
+        <button class="lang-btn" data-lang="mr">मरा</button>
+      </div>
+      <a href="pages/login/login.html" class="btn btn-secondary btn-sm" data-i18n="nav.login">Login</a>
+      <a href="pages/register/register.html" class="btn btn-primary btn-sm" data-i18n="nav.getStarted">Get Started</a>
+      <button class="nav-toggle" id="mobileMenuToggle" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+
+  <!-- ═══ Hero Section ═══ -->
+  <section class="hero">
+    <div class="hero-content container">
+      <div class="hero-badge" data-i18n="hero.badge">🌱 Digital Bridge for Farmers & Traders</div>
+      <h1>
+        <span data-i18n="hero.title1">Find the </span><span class="highlight" data-i18n="hero.titleHighlight">Best Trader.</span><br>
+        <span data-i18n="hero.title2">Get a </span><span class="accent" data-i18n="hero.titleAccent">Fair Price.</span>
+      </h1>
+      <p class="hero-text" data-i18n="hero.text">
+        KisanSetu helps farmers compare nearby traders, calculate net returns after transport costs, and recommends the best selling opportunity — so you always get a fair deal.
+      </p>
+      <div class="hero-actions">
+        <a href="pages/register/register.html" class="btn btn-primary btn-lg" data-i18n="hero.cta1">🌾 Get Started Free</a>
+        <a href="pages/login/login.html" class="btn btn-secondary btn-lg" data-i18n="hero.cta2">Find Best Trader →</a>
+      </div>
+      <div class="hero-stats">
+        <div>
+          <div class="hero-stat-value" data-i18n="hero.stat1Value">5,200+</div>
+          <div class="hero-stat-label" data-i18n="hero.stat1Label">Farmers Connected</div>
+        </div>
+        <div>
+          <div class="hero-stat-value" data-i18n="hero.stat2Value">850+</div>
+          <div class="hero-stat-label" data-i18n="hero.stat2Label">Verified Traders</div>
+        </div>
+        <div>
+          <div class="hero-stat-value" data-i18n="hero.stat3Value">₹12Cr+</div>
+          <div class="hero-stat-label" data-i18n="hero.stat3Label">Trade Facilitated</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="hero-card-preview">
+        <div class="preview-header">
+          <span class="emoji">🏆</span>
+          <h4 data-i18n="dash.bestOpp">Best Selling Opportunity</h4>
+        </div>
+        <div class="preview-row">
+          <span class="preview-label">Crop</span>
+          <span class="preview-value">Onion — 1,000 kg</span>
+        </div>
+        <div class="preview-row">
+          <span class="preview-label">Best Trader</span>
+          <span class="preview-value">ABC Traders</span>
+        </div>
+        <div class="preview-row">
+          <span class="preview-label">Offer Price</span>
+          <span class="preview-value price">₹28/kg</span>
+        </div>
+        <div class="preview-row">
+          <span class="preview-label">Distance</span>
+          <span class="preview-value">18 km</span>
+        </div>
+        <div class="preview-row">
+          <span class="preview-label">Transport Cost</span>
+          <span class="preview-value">₹1,500</span>
+        </div>
+        <div class="preview-row">
+          <span class="preview-label">Est. Net Return</span>
+          <span class="preview-value net">₹26,500</span>
+        </div>
+        <div class="preview-recommend" data-i18n="dash.recommendedPrice">💡 Recommended Selling Price: ₹27–₹29/kg</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ How It Works ═══ -->
+  <section class="section section-alt" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <h2 data-i18n="how.title">How KisanSetu Works</h2>
+        <p data-i18n="how.subtitle">Simple steps to find the best trader and get a fair price for your harvest</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card animate-fade stagger-1">
+          <div class="step-number">1</div>
+          <h4 data-i18n="how.step1Title">Add Your Crop</h4>
+          <p data-i18n="how.step1Text">List your crop with details like quantity, expected price, and condition</p>
+        </div>
+        <div class="step-card animate-fade stagger-2">
+          <div class="step-number">2</div>
+          <h4 data-i18n="how.step2Title">Compare Traders</h4>
+          <p data-i18n="how.step2Text">View nearby traders, their offers, distance and estimated transport costs</p>
+        </div>
+        <div class="step-card animate-fade stagger-3">
+          <div class="step-number">3</div>
+          <h4 data-i18n="how.step3Title">See Best Match</h4>
+          <p data-i18n="how.step3Text">KisanSetu calculates net return and recommends the best trader for you</p>
+        </div>
+        <div class="step-card animate-fade stagger-4">
+          <div class="step-number">4</div>
+          <h4 data-i18n="how.step4Title">Make a Deal</h4>
+          <p data-i18n="how.step4Text">Accept, reject, or counter-offer directly. Negotiate a fair price</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Features ═══ -->
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <h2 data-i18n="feat.title">Why Choose KisanSetu?</h2>
+        <p data-i18n="feat.subtitle">Everything a farmer needs to sell smarter and earn better</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card animate-fade stagger-1">
+          <div class="feature-icon">🏆</div>
+          <h4 data-i18n="feat.1Title">Best Trader Recommendation</h4>
+          <p data-i18n="feat.1Text">We rank traders by estimated net return — not just offer price — so you know who truly gives the best deal.</p>
+        </div>
+        <div class="feature-card animate-fade stagger-2">
+          <div class="feature-icon">💰</div>
+          <h4 data-i18n="feat.2Title">Fair Price Guidance</h4>
+          <p data-i18n="feat.2Text">See recommended selling price ranges based on current market data, so you can negotiate confidently.</p>
+        </div>
+        <div class="feature-card animate-fade stagger-3">
+          <div class="feature-icon">📈</div>
+          <h4 data-i18n="feat.3Title">Live Market Prices</h4>
+          <p data-i18n="feat.3Text">Check mandi rates from nearby markets with trend visualizations to time your sales better.</p>
+        </div>
+        <div class="feature-card animate-fade stagger-4">
+          <div class="feature-icon">🚚</div>
+          <h4 data-i18n="feat.4Title">Transport Cost Estimate</h4>
+          <p data-i18n="feat.4Text">See estimated transport costs per trader, so your net return calculation is realistic.</p>
+        </div>
+        <div class="feature-card animate-fade stagger-5">
+          <div class="feature-icon">🤝</div>
+          <h4 data-i18n="feat.5Title">Direct Negotiation</h4>
+          <p data-i18n="feat.5Text">Accept, reject, or counter-offer trader bids directly from your dashboard without middlemen.</p>
+        </div>
+        <div class="feature-card animate-fade stagger-6">
+          <div class="feature-icon">🔒</div>
+          <h4 data-i18n="feat.6Title">Verified Traders</h4>
+          <p data-i18n="feat.6Text">Trade with confidence — verified traders are vetted for reliability and fair practices.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Benefits for Farmers ═══ -->
+  <section class="section section-dark" id="benefits">
+    <div class="container">
+      <div class="section-header">
+        <h2 data-i18n="ben.title">Benefits for Farmers</h2>
+        <p data-i18n="ben.subtitle">KisanSetu puts the power back in the farmer's hands</p>
+      </div>
+      <div class="benefits-grid">
+        <div class="benefit-item">
+          <div class="benefit-icon">📊</div>
+          <div>
+            <h4 data-i18n="ben.1Title">Better Price Discovery</h4>
+            <p data-i18n="ben.1Text">Compare multiple traders and market prices side-by-side before deciding</p>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon">💵</div>
+          <div>
+            <h4 data-i18n="ben.2Title">Higher Net Earnings</h4>
+            <p data-i18n="ben.2Text">Factor in transport costs to choose the trader that gives you the best take-home</p>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon">⏰</div>
+          <div>
+            <h4 data-i18n="ben.3Title">Save Time</h4>
+            <p data-i18n="ben.3Text">No need to visit every mandi. Compare all traders from your phone</p>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon">🛡️</div>
+          <div>
+            <h4 data-i18n="ben.4Title">Transparency</h4>
+            <p data-i18n="ben.4Text">See exactly how prices compare. No hidden costs, no surprises</p>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon">🗣️</div>
+          <div>
+            <h4 data-i18n="ben.5Title">Negotiation Power</h4>
+            <p data-i18n="ben.5Text">Armed with market data and recommended prices, negotiate from a position of strength</p>
+          </div>
+        </div>
+        <div class="benefit-item">
+          <div class="benefit-icon">🌐</div>
+          <div>
+            <h4 data-i18n="ben.6Title">Multi-Language Support</h4>
+            <p data-i18n="ben.6Text">Use KisanSetu in English, Hindi, or Marathi for easy understanding</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CTA Section ═══ -->
+  <section class="section" style="text-align:center;">
+    <div class="container">
+      <h2 style="margin-bottom: 0.75rem;" data-i18n="cta.title">Ready to Get the Best Price?</h2>
+      <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;" data-i18n="cta.subtitle">
+        Join thousands of farmers who are already selling smarter with KisanSetu
+      </p>
+      <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <a href="pages/register/register.html" class="btn btn-primary btn-lg" data-i18n="cta.btn1">Create Free Account</a>
+        <a href="pages/login/login.html" class="btn btn-secondary btn-lg" data-i18n="cta.btn2">Login to Dashboard</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Footer ═══ -->
+  <footer class="footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <h3>🌾 Kisan<span>Setu</span></h3>
+        <p data-i18n="footer.desc">Digital bridge between farmers and traders. Helping farmers find the best trader and get a fair price.</p>
+      </div>
+      <div class="footer-section">
+        <h4 data-i18n="footer.platform">Platform</h4>
+        <a href="pages/login/login.html" class="footer-link" data-i18n="nav.login">Login</a>
+        <a href="pages/register/register.html" class="footer-link" data-i18n="nav.getStarted">Register</a>
+        <a href="pages/market/market.html" class="footer-link" data-i18n="side.marketPrices">Market Prices</a>
+        <a href="#features" class="footer-link" data-i18n="nav.features">Features</a>
+      </div>
+      <div class="footer-section">
+        <h4 data-i18n="footer.forFarmers">For Farmers</h4>
+        <a href="pages/dashboard/dashboard.html" class="footer-link" data-i18n="side.dashboard">Dashboard</a>
+        <a href="pages/traders/traders.html" class="footer-link" data-i18n="side.nearbyTraders">Find Traders</a>
+        <a href="pages/offers/offers.html" class="footer-link" data-i18n="side.offers">Manage Offers</a>
+      </div>
+      <div class="footer-section">
+        <h4 data-i18n="footer.support">Support</h4>
+        <a href="#" class="footer-link" data-i18n="footer.helpCenter">Help Center</a>
+        <a href="#" class="footer-link" data-i18n="footer.contactUs">Contact Us</a>
+        <a href="#" class="footer-link" data-i18n="footer.privacy">Privacy Policy</a>
+        <a href="#" class="footer-link" data-i18n="footer.terms">Terms of Use</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p data-i18n="footer.copyright">© 2026 KisanSetu. Built for Smart India Hackathon.</p>
+      <div class="demo-badge" data-i18n="footer.demo">⚠️ This is a prototype with demo data — not connected to live markets</div>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/translations.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('landingNav');
+      nav.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    const mobileToggle = document.getElementById('mobileMenuToggle');
+    const navLinks = document.getElementById('navLinks');
+    if (mobileToggle && navLinks) {
+      mobileToggle.addEventListener('click', () => {
+        navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+        navLinks.style.flexDirection = 'column';
+        navLinks.style.position = 'absolute';
+        navLinks.style.top = 'var(--header-height)';
+        navLinks.style.right = '1rem';
+        navLinks.style.background = 'var(--card)';
+        navLinks.style.padding = '1rem';
+        navLinks.style.borderRadius = 'var(--radius)';
+        navLinks.style.boxShadow = 'var(--shadow-lg)';
+        navLinks.style.border = '1px solid var(--border)';
+      });
+    }
+  </script>
+</body>
+</html>

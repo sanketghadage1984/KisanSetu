@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Crop — KisanSetu</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="add-crop.css">
+</head>
+<body>
+  <nav class="top-nav" id="topNav"></nav>
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="dashboard-layout">
+    <div class="page-content">
+      <div class="dashboard-header">
+        <div>
+          <h1 class="dashboard-title" data-i18n="addCrop.title">🌾 Add New Crop</h1>
+          <p class="dashboard-subtitle" data-i18n="addCrop.subtitle">List your crop and find the best buyer</p>
+        </div>
+        <a href="../dashboard/dashboard.html" class="btn btn-outline btn-sm" data-i18n="addCrop.back">← Back to Dashboard</a>
+      </div>
+
+      <div class="card animate-fade" style="max-width:720px;">
+        <form id="addCropForm" onsubmit="return handleAddCrop(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="cropName"><span data-i18n="addCrop.cropName">Crop Name</span> <span class="required">*</span></label>
+              <select id="cropName" class="form-control" required onchange="updateVarieties()">
+                <option value="" data-i18n="addCrop.selectCrop">Select crop</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="variety"><span data-i18n="addCrop.variety">Variety</span> <span class="required">*</span></label>
+              <select id="variety" class="form-control" required>
+                <option value="" data-i18n="addCrop.selectVariety">Select variety</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="quantity"><span data-i18n="addCrop.quantity">Quantity (kg)</span> <span class="required">*</span></label>
+              <input type="number" id="quantity" class="form-control" placeholder="e.g. 1000" min="1" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="expectedPrice"><span data-i18n="addCrop.expectedPrice">Expected Price (₹/kg)</span> <span class="required">*</span></label>
+              <input type="number" id="expectedPrice" class="form-control" placeholder="e.g. 25" min="1" required>
+              <span class="form-hint" id="priceHint"></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="location" data-i18n="addCrop.location">Location</label>
+            <input type="text" id="location" class="form-control" placeholder="Village/Town, District" value="">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="harvestDate" data-i18n="addCrop.harvestDate">Harvest Date</label>
+              <input type="date" id="harvestDate" class="form-control">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="condition"><span data-i18n="addCrop.condition">Crop Condition</span> <span class="required">*</span></label>
+              <select id="condition" class="form-control" required>
+                <option value="Excellent" data-i18n="addCrop.excellent">🟢 Excellent</option>
+                <option value="Good" data-i18n="addCrop.good">🟡 Good</option>
+                <option value="Average" data-i18n="addCrop.average">🟠 Average</option>
+                <option value="Below Average" data-i18n="addCrop.belowAvg">🔴 Below Average</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="addCrop.image">Crop Image (optional)</label>
+            <div class="file-upload" id="fileUpload" onclick="document.getElementById('cropImage').click()">
+              <input type="file" id="cropImage" accept="image/*" onchange="handleImagePreview(event)">
+              <div class="file-upload-icon">📸</div>
+              <div class="file-upload-text" data-i18n="addCrop.uploadText">Click to upload crop photo</div>
+              <div id="imagePreview" style="margin-top:0.5rem;"></div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="notes" data-i18n="addCrop.notes">Additional Notes</label>
+            <textarea id="notes" class="form-control" placeholder="Any additional details about your crop..." rows="3"></textarea>
+          </div>
+
+          <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+            <button type="submit" class="btn btn-primary btn-lg" data-i18n="addCrop.submit">🌾 List Crop</button>
+            <button type="reset" class="btn btn-outline btn-lg" data-i18n="addCrop.clear">Clear Form</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" id="bottomNav"></nav>
+
+  <script src="../../js/data.js"></script>
+  <script src="../../js/translations.js"></script>
+  <script src="../../js/app.js"></script>
+  <script src="add-crop.js"></script>
+</body>
+</html>

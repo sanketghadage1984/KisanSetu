@@ -1,0 +1,129 @@
+/* Market page specific styles */
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.market-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  transition: var(--transition);
+}
+
+.market-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.market-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.market-crop-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.market-crop-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius);
+  background: var(--primary-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.market-crop-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+}
+
+.market-crop-variety {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.trend-badge.up {
+  background: var(--success-bg);
+  color: #15803d;
+}
+
+.trend-badge.down {
+  background: var(--danger-bg);
+  color: #b91c1c;
+}
+
+.trend-badge.stable {
+  background: var(--bg);
+  color: var(--text-muted);
+}
+
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.price-item {
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+
+.price-item-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.price-item-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.price-item-value.min { color: var(--danger); }
+.price-item-value.modal { color: var(--primary); }
+.price-item-value.max { color: var(--success); }
+
+.market-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-light);
+}
+
+@media (max-width: 640px) {
+  .market-grid {
+    grid-template-columns: 1fr;
+  }
+}

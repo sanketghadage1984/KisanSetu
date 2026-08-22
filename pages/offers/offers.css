@@ -1,0 +1,66 @@
+/* Offers page specific styles */
+
+.offer-card {
+  margin-bottom: 1rem;
+}
+
+.offer-conversation {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--bg);
+  border-radius: var(--radius);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.message-bubble {
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.message-bubble.farmer {
+  align-items: flex-end;
+}
+
+.message-bubble.trader {
+  align-items: flex-start;
+}
+
+.message-text {
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius);
+  max-width: 80%;
+  font-size: 0.9rem;
+}
+
+.message-bubble.trader .message-text {
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+
+.message-bubble.farmer .message-text {
+  background: var(--primary-50);
+  color: var(--primary-dark);
+}
+
+.message-bubble.system .message-text {
+  background: var(--accent-50);
+  color: var(--accent-dark);
+  text-align: center;
+  font-size: 0.85rem;
+  max-width: 100%;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.offer-actions-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}

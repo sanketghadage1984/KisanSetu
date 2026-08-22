@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trader Dashboard — KisanSetu</title>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="trader-dashboard.css">
+</head>
+<body>
+  <nav class="top-nav" id="topNav"></nav>
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="dashboard-layout">
+    <div class="page-content">
+
+      <div class="demo-banner">
+        <span class="icon">ℹ️</span>
+        <span data-i18n="traderDash.demo">Demo Mode — Trader dashboard with illustrative data.</span>
+      </div>
+
+      <!-- Welcome -->
+      <div class="trader-welcome animate-fade">
+        <div class="welcome-text">
+          <h2><span data-i18n="traderDash.welcome">Welcome,</span> <span id="traderName">Trader</span>! 🤝</h2>
+          <p data-i18n="traderDash.subtitle">Browse available crops from nearby farmers and make offers</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row" style="display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem;">
+        <div class="stat-card animate-fade stagger-1">
+          <div class="stat-icon green">🌾</div>
+          <div class="stat-info">
+            <div class="stat-label" data-i18n="traderDash.listings">Available Listings</div>
+            <div class="stat-value" id="listingCount">0</div>
+          </div>
+        </div>
+        <div class="stat-card animate-fade stagger-2">
+          <div class="stat-icon amber">📤</div>
+          <div class="stat-info">
+            <div class="stat-label" data-i18n="traderDash.offersSent">Offers Sent</div>
+            <div class="stat-value" id="offersSent">3</div>
+          </div>
+        </div>
+        <div class="stat-card animate-fade stagger-3">
+          <div class="stat-icon blue">✅</div>
+          <div class="stat-info">
+            <div class="stat-label" data-i18n="traderDash.dealsWon">Deals Won</div>
+            <div class="stat-value">12</div>
+          </div>
+        </div>
+        <div class="stat-card animate-fade stagger-4">
+          <div class="stat-icon green">⭐</div>
+          <div class="stat-info">
+            <div class="stat-label" data-i18n="traderDash.rating">Rating</div>
+            <div class="stat-value">4.6</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Search & Filter -->
+      <div class="search-filter-bar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchListing" placeholder="Search crop, farmer, location..." data-i18n-placeholder="traderDash.search" oninput="renderListings()">
+        </div>
+        <select class="filter-select" id="filterCrop" onchange="renderListings()">
+          <option value="" data-i18n="traderDash.allCrops">All Crops</option>
+          <option value="Onion">Onion</option>
+          <option value="Tomato">Tomato</option>
+          <option value="Potato">Potato</option>
+          <option value="Soybean">Soybean</option>
+          <option value="Grapes">Grapes</option>
+        </select>
+        <select class="filter-select" id="sortListing" onchange="renderListings()">
+          <option value="distance" data-i18n="traderDash.sortNearest">Sort: Nearest</option>
+          <option value="price" data-i18n="traderDash.sortPrice">Sort: Lowest Price</option>
+          <option value="quantity" data-i18n="traderDash.sortQty">Sort: Highest Qty</option>
+        </select>
+      </div>
+
+      <!-- Listings Grid -->
+      <div id="listingsGrid" class="listings-grid"></div>
+
+    </div>
+  </main>
+
+  <!-- Make Offer Modal -->
+  <div class="modal-overlay" id="offerModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>📤 Make an Offer</h3>
+        <button class="modal-close" onclick="closeOfferModal()">&times;</button>
+      </div>
+      <div id="offerModalContent"></div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav" id="bottomNav"></nav>
+
+  <script src="../../js/data.js"></script>
+  <script src="../../js/translations.js"></script>
+  <script src="../../js/app.js"></script>
+  <script src="trader-dashboard.js"></script>
+</body>
+</html>
