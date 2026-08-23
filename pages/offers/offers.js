@@ -107,8 +107,8 @@ function renderOffers() {
         ${messages ? `<div class="offer-conversation">${messages}</div>` : ''}
 
         ${canAct ? `
-        <div class="counter-offer-input">
-          <input type="number" id="counter_${offer.id}" placeholder="${_t('offers.counterPlaceholder')}" step="0.5" min="1">
+        <div class="counter-offer-input" style="margin-top: 1rem;">
+          <input type="number" id="counter_${offer.id}" class="form-control" placeholder="${_t('offers.counterPlaceholder')}" step="0.5" min="1">
         </div>
         <div class="offer-actions-row">
           <button class="btn btn-success btn-sm" onclick="acceptOffer('${offer.id}')">${_t('offers.accept')}</button>

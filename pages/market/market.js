@@ -1,14 +1,6 @@
 // Market Prices Page Logic
+// getCropEmoji is now provided by the centralized crop-icons.js
 
-const cropEmojiMap = {
-  'onion': '🧅', 'tomato': '🍅', 'wheat': '🌾', 'potato': '🥔',
-  'soybean': '🫘', 'rice': '🍚', 'sugarcane': '🎋', 'grapes': '🍇',
-  'pomegranate': '🫐', 'cotton': '☁️', 'maize': '🌽', 'chickpea': '🫘'
-};
-
-function getCropEmoji(name) {
-  return cropEmojiMap[name.toLowerCase()] || '🌱';
-}
 
 let currentView = 'cards';
 

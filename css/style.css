@@ -70,7 +70,89 @@
   --header-height: 64px;
   --bottom-nav-height: 72px;
   --container-max: 1200px;
+
+  /* Dynamic Theme Gradients & Backgrounds */
+  --nav-bg: rgba(255, 255, 255, 0.95);
+  --card-bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #ffffff 40%, #ecfdf5 100%);
+  --hero-bg-gradient: linear-gradient(160deg, #f0fdf4 0%, #ffffff 30%, #ecfdf5 60%, #d1fae5 100%);
+  --recommend-bg: var(--accent-50);
+  --recommend-text: var(--text);
+  --recommend-border: var(--accent-dark);
 }
+
+/* ── Dark Theme Overrides ────────────────────────────── */
+[data-theme="dark"] {
+  /* Neutrals */
+  --bg: #0C140E;
+  --bg-alt: #132017;
+  --card: #17271C;
+  --card-hover: #1E3325;
+  --border: #253D2C;
+  --border-light: #1D3123;
+
+  /* Text */
+  --text: #F0F7F2;
+  --text-secondary: #A6C9AF;
+  --text-muted: #74997E;
+  --text-inverse: #0C140E;
+
+  /* Primary Palette */
+  --primary: #40916C;
+  --primary-light: #52B788;
+  --primary-lighter: #74C69D;
+  --primary-dark: #95D5B2;
+  --primary-50: #1A3828;
+  --primary-100: #224A35;
+  --primary-gradient: linear-gradient(135deg, #2D6A4F 0%, #40916C 100%);
+
+  /* Dynamic Theme Gradients & Backgrounds */
+  --nav-bg: rgba(19, 32, 23, 0.95);
+  --card-bg-gradient: linear-gradient(135deg, #17271C 0%, #1D3325 50%, #15241A 100%);
+  --hero-bg-gradient: linear-gradient(160deg, #0C140E 0%, #121D15 50%, #182A1F 100%);
+  --recommend-bg: #1A3828;
+  --recommend-text: #95D5B2;
+  --recommend-border: #52B788;
+
+  /* Status background overrides */
+  --success-bg: #14351F;
+  --warning-bg: #33240B;
+  --danger-bg: #381515;
+  --info-bg: #122840;
+
+  /* Accent */
+  --accent: #F5B041;
+  --accent-dark: #F39C12;
+  --accent-light: #FAD7A0;
+  --accent-50: #2C210D;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 10px 20px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.7);
+  --shadow-glow: 0 0 20px rgba(82, 183, 136, 0.25);
+}
+
+/* ── Theme Toggle Button ────────────────────────────── */
+.theme-toggle-btn {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: var(--transition);
+}
+.theme-toggle-btn:hover {
+  background: var(--border-light);
+  transform: scale(1.06);
+}
+
 
 /* ── Reset & Base ────────────────────────────────────── */
 *, *::before, *::after {
@@ -327,7 +409,7 @@ h6 { font-size: 1rem; font-weight: 600; line-height: 1.5; }
 /* Featured card (Best Trader) */
 .card-featured {
   border: 2px solid var(--primary-lighter);
-  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%, #ecfdf5 100%);
+  background: var(--card-bg-gradient);
   box-shadow: var(--shadow-glow);
 }
 .card-featured:hover {
@@ -431,6 +513,9 @@ h6 { font-size: 1rem; font-weight: 600; line-height: 1.5; }
   margin-left: 2px;
 }
 
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]),
+select,
+textarea,
 .form-control {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -507,7 +592,7 @@ select.form-control {
   left: 0;
   right: 0;
   height: var(--header-height);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--nav-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
@@ -608,10 +693,10 @@ select.form-control {
   left: 0;
   right: 0;
   height: var(--header-height);
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--nav-bg);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(226, 232, 228, 0.6);
+  border-bottom: 1px solid var(--border);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -765,7 +850,7 @@ select.form-control {
   min-height: 92vh;
   display: flex;
   align-items: center;
-  background: linear-gradient(160deg, #f0fdf4 0%, #ffffff 30%, #ecfdf5 60%, #d1fae5 100%);
+  background: var(--hero-bg-gradient);
   overflow: hidden;
   padding-top: var(--header-height);
 }
@@ -886,10 +971,12 @@ select.form-control {
   box-shadow: var(--shadow-lg);
   max-width: 400px;
   width: 100%;
-  transform: rotate(-2deg);
   transition: var(--transition);
 }
-.hero-card-preview:hover { transform: rotate(0deg); }
+.hero-card-preview:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+}
 
 .hero-card-preview .preview-header {
   display: flex;
@@ -928,6 +1015,31 @@ select.form-control {
   color: var(--primary-dark);
   font-weight: 600;
 }
+
+/* ── Crop SVG Icon System ───────────────────────────── */
+.crop-svg-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  line-height: 1;
+}
+.crop-svg-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Inside icon containers, size the SVG properly */
+.crop-icon .crop-svg-icon,
+.market-crop-icon .crop-svg-icon,
+.listing-crop-icon .crop-svg-icon {
+  width: 28px;
+  height: 28px;
+}
+
 
 /* ── Landing Sections ────────────────────────────────── */
 .section {
@@ -1161,7 +1273,7 @@ select.form-control {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(160deg, #f0fdf4 0%, #ffffff 40%, #ecfdf5 100%);
+  background: var(--hero-bg-gradient);
   padding: 2rem;
 }
 
@@ -1344,7 +1456,7 @@ tr:hover td { background: var(--bg); }
 }
 
 .best-trader-card {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 40%, #ecfdf5 100%);
+  background: var(--card-bg-gradient);
   border: 2px solid var(--primary-lighter);
   border-radius: var(--radius-xl);
   padding: 2rem;
@@ -1392,13 +1504,13 @@ tr:hover td { background: var(--bg); }
   justify-content: space-between;
   align-items: center;
   padding: 0.5rem 0;
-  border-bottom: 1px solid rgba(45, 106, 79, 0.1);
+  border-bottom: 1px solid var(--border);
 }
 .detail-row:last-child { border-bottom: none; }
 .detail-label { color: var(--text-secondary); font-size: 0.9rem; }
 .detail-value { font-weight: 600; color: var(--text); font-size: 0.95rem; }
 .detail-value.highlight {
-  color: var(--primary);
+  color: var(--primary-light);
   font-size: 1.2rem;
   font-weight: 800;
 }
@@ -1411,8 +1523,8 @@ tr:hover td { background: var(--bg); }
 .recommended-price {
   margin-top: 1rem;
   padding: 1rem 1.25rem;
-  background: var(--accent-50);
-  border: 1px solid var(--accent-light);
+  background: var(--recommend-bg);
+  border-left: 4px solid var(--recommend-border);
   border-radius: var(--radius);
   display: flex;
   align-items: center;
@@ -1421,7 +1533,7 @@ tr:hover td { background: var(--bg); }
 .recommended-price .price-range {
   font-size: 1.2rem;
   font-weight: 800;
-  color: var(--accent-dark);
+  color: var(--recommend-text);
 }
 .recommended-price .price-label {
   font-size: 0.85rem;
@@ -1431,9 +1543,9 @@ tr:hover td { background: var(--bg); }
 .why-recommended {
   margin-top: 1.25rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--bg-alt);
   border-radius: var(--radius);
-  border: 1px solid var(--border-light);
+  border: 1px solid var(--border);
 }
 
 .why-recommended h5 {
@@ -1482,7 +1594,7 @@ tr:hover td { background: var(--bg); }
 
 .trader-card.best {
   border: 2px solid var(--primary-lighter);
-  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+  background: var(--card-bg-gradient);
 }
 
 .trader-header {

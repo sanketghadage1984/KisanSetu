@@ -42,11 +42,13 @@
 .message-bubble.farmer .message-text {
   background: var(--primary-50);
   color: var(--primary-dark);
+  border: 1px solid var(--primary-100);
 }
 
 .message-bubble.system .message-text {
-  background: var(--accent-50);
-  color: var(--accent-dark);
+  background: var(--recommend-bg);
+  color: var(--recommend-text);
+  border: 1px solid var(--border);
   text-align: center;
   font-size: 0.85rem;
   max-width: 100%;

@@ -6,9 +6,11 @@
 const App = {
   // ── Initialize ────────────────────────────────────
   init() {
+    this.initTheme();
     this.initLocalStorage();
     this.initNavigation();
     this.initLangSelector();
+    this.initThemeToggle();
     this.translatePage();
     this.checkAuth();
   },
@@ -286,14 +288,70 @@ const App = {
     document.querySelectorAll('.lang-btn').forEach(btn => {
       const btnLang = btn.getAttribute('data-lang');
       btn.classList.toggle('active', btnLang === currentLang);
-      btn.addEventListener('click', (e) => {
-        e.preventDefault();
-        const lang = btn.getAttribute('data-lang');
-        App.setLang(lang);
-        const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी' };
-        App.showNotification('Language / भाषा', `${langNames[lang] || lang}`, 'info');
-      });
     });
+
+    if (!this._langListenerAttached) {
+      this._langListenerAttached = true;
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.lang-btn');
+        if (btn) {
+          e.preventDefault();
+          const lang = btn.getAttribute('data-lang');
+          if (lang) {
+            App.setLang(lang);
+            const langNames = { en: 'English', hi: 'हिंदी', mr: 'मराठी' };
+            App.showNotification('Language / भाषा', `${langNames[lang] || lang}`, 'info');
+          }
+        }
+      });
+    }
+  },
+  // ── Theme (Dark / Light) ─────────────────────────
+  getTheme() {
+    const saved = localStorage.getItem('kisansetu_theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  },
+
+  setTheme(theme) {
+    localStorage.setItem('kisansetu_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    this.updateThemeButtons(theme);
+  },
+
+  toggleTheme() {
+    const current = this.getTheme();
+    const next = current === 'dark' ? 'light' : 'dark';
+    this.setTheme(next);
+    const label = next === 'dark' ? '🌙 Dark Mode' : '☀️ Light Mode';
+    this.showNotification('Theme / थीम', label, 'info');
+  },
+
+  updateThemeButtons(theme) {
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+      btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+      btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+      btn.setAttribute('title', theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+    });
+  },
+
+  initTheme() {
+    const theme = this.getTheme();
+    document.documentElement.setAttribute('data-theme', theme);
+  },
+
+  initThemeToggle() {
+    this.updateThemeButtons(this.getTheme());
+    if (!this._themeListenerAttached) {
+      this._themeListenerAttached = true;
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.theme-toggle-btn');
+        if (btn) {
+          e.preventDefault();
+          App.toggleTheme();
+        }
+      });
+    }
   },
 
   // ── Notifications (Toast) ────────────────────────
@@ -531,10 +589,12 @@ function renderTopNav(userType) {
   const name = user ? user.name : 'User';
   const avatar = user ? (user.avatar || name.charAt(0)) : 'U';
   const currentLang = App.getLang();
+  const currentTheme = App.getTheme();
 
   return `
     <a href="${base}index.html" class="nav-logo">🌾 Kisan<span>Setu</span></a>
     <div class="nav-actions">
+      <button class="theme-toggle-btn" aria-label="Toggle Theme" title="Toggle Theme">${currentTheme === 'dark' ? '☀️' : '🌙'}</button>
       <div class="lang-selector">
         <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" data-lang="en">EN</button>
         <button class="lang-btn ${currentLang === 'hi' ? 'active' : ''}" data-lang="hi">हिं</button>
@@ -547,6 +607,13 @@ function renderTopNav(userType) {
     </div>
   `;
 }
+
+// Immediate theme execution to prevent theme flicker on load
+(function() {
+  const saved = localStorage.getItem('kisansetu_theme');
+  const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
 
 // Auto-init on DOM ready
 document.addEventListener('DOMContentLoaded', () => App.init());

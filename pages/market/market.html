@@ -30,7 +30,7 @@
       <div class="search-filter-bar">
         <div class="search-box">
           <span class="search-icon">🔍</span>
-          <input type="text" id="searchCrop" placeholder="Search crop..." data-i18n-placeholder="market.search" oninput="filterMarket()">
+          <input type="text" id="searchCrop" class="form-control" placeholder="Search crop..." data-i18n-placeholder="market.search" oninput="filterMarket()">
         </div>
         <select class="filter-select" id="sortBy" onchange="filterMarket()">
           <option value="name" data-i18n="market.sortName">Sort: Name</option>
@@ -57,6 +57,7 @@
 
   <nav class="bottom-nav" id="bottomNav"></nav>
 
+  <script src="../../js/crop-icons.js"></script>
   <script src="../../js/data.js"></script>
   <script src="../../js/translations.js"></script>
   <script src="../../js/app.js"></script>
