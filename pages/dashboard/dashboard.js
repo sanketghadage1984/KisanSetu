@@ -1,19 +1,34 @@
 // ═══════════════════════════════════════════════════════
-// KisanSetu — Farmer Dashboard Logic
+// KisanSetu — Farmer Dashboard Logic (Firebase Firestore)
 // ═══════════════════════════════════════════════════════
 
+let _dashCrops = [], _dashOffers = [], _dashTxns = [];
+let _unsubCrops = null, _unsubOffers = null;
+
 document.addEventListener('DOMContentLoaded', () => {
-  initDashboard();
+  auth.onAuthStateChanged(user => {
+    if (!user) { App.navigateTo('login'); return; }
+    initDashboard(user);
+  });
 
   window.addEventListener('languageChanged', () => {
-    initDashboard();
+    const userType = App.getUserType();
+    document.getElementById('topNav').innerHTML = `
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
+      ${renderTopNav(userType)}
+    `;
+    App.initNavigation();
+    App.translatePage();
+    populateBestTrader();
+    populateCrops();
+    populateMarketQuick();
+    populateRecentOffers();
+    populateRecentTransactions();
   });
 });
 
-function initDashboard() {
+function initDashboard(user) {
   const userType = App.getUserType();
-
-  // Inject navigation
   document.getElementById('topNav').innerHTML = `
     <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
     ${renderTopNav(userType)}
@@ -25,34 +40,48 @@ function initDashboard() {
   App.initNavigation();
   App.translatePage();
 
-  // Populate dashboard
-  const user = App.getUser();
-  if (user) {
-    document.getElementById('farmerName').textContent = user.name.split(' ')[0];
-  }
+  document.getElementById('farmerName').textContent = (user.displayName || user.name || 'Farmer').split(' ')[0];
 
-  populateStats();
-  populateBestTrader();
-  populateCrops();
+  // Real-time listener — Farmer's crops
+  if (_unsubCrops) _unsubCrops();
+  _unsubCrops = BackendService.listenToCrops(user.uid, (crops) => {
+    _dashCrops = crops;
+    populateStats();
+    populateBestTrader();
+    populateCrops();
+  });
+
+  // Real-time listener — Farmer's offers
+  if (_unsubOffers) _unsubOffers();
+  _unsubOffers = BackendService.listenToOffers(user.uid, 'farmer', (offers) => {
+    _dashOffers = offers;
+    populateStats();
+    populateRecentOffers();
+  });
+
+  // One-time load of transactions
+  BackendService.getTransactions(user.uid).then(txns => {
+    _dashTxns = txns;
+    populateStats();
+    populateRecentTransactions();
+  }).catch(() => {
+    _dashTxns = App.getTransactions();
+    populateRecentTransactions();
+  });
+
   populateMarketQuick();
-  populateRecentOffers();
-  populateRecentTransactions();
 }
 
 function populateStats() {
-  const crops = App.getCrops();
-  const offers = App.getOffers();
-  const transactions = App.getTransactions();
+  const activeCrops    = _dashCrops.filter(c => c.status === 'active').length;
+  const pendingOffers  = _dashOffers.filter(o => o.status === 'pending' || o.status === 'countered').length;
+  const totalEarnings  = _dashTxns.reduce((sum, t) => sum + (t.netAmount || 0), 0);
+  const completedDeals = _dashTxns.filter(t => t.status === 'completed').length;
 
-  const activeCrops = crops.filter(c => c.status === 'active').length;
-  const pendingOffers = offers.filter(o => o.status === 'pending' || o.status === 'countered').length;
-  const totalEarnings = transactions.reduce((sum, t) => sum + t.netAmount, 0);
-  const completedDeals = transactions.filter(t => t.status === 'completed').length;
-
-  document.getElementById('activeCropCount').textContent = activeCrops;
+  document.getElementById('activeCropCount').textContent  = activeCrops;
   document.getElementById('pendingOfferCount').textContent = pendingOffers;
-  document.getElementById('totalEarnings').textContent = App.formatPrice(totalEarnings);
-  document.getElementById('completedDeals').textContent = completedDeals;
+  document.getElementById('totalEarnings').textContent    = App.formatPrice(totalEarnings);
+  document.getElementById('completedDeals').textContent   = completedDeals;
 }
 
 function populateBestTrader() {
@@ -182,7 +211,7 @@ function populateBestTrader() {
 
 function populateCrops() {
   const _t = window.t || ((k) => k);
-  const crops = App.getCrops();
+  const crops = _dashCrops;
   const container = document.getElementById('cropList');
 
   if (!crops.length) {
@@ -191,6 +220,7 @@ function populateCrops() {
         <div class="empty-icon">🌱</div>
         <h3>No crops listed</h3>
         <p>Add your first crop to get started</p>
+        <a href="../add-crop/add-crop.html" class="btn btn-primary btn-sm">+ Add Crop</a>
       </div>
     `;
     return;
@@ -198,23 +228,20 @@ function populateCrops() {
 
   container.innerHTML = crops.slice(0, 5).map(crop => {
     const statusBadge = {
-      active: `<span class="badge badge-success">${_t('common.active')}</span>`,
-      sold: `<span class="badge badge-info">${_t('common.sold')}</span>`,
+      active:   `<span class="badge badge-success">${_t('common.active')}</span>`,
+      sold:     `<span class="badge badge-info">${_t('common.sold')}</span>`,
       upcoming: `<span class="badge badge-warning">${_t('common.upcoming')}</span>`
     };
-
     return `
       <div class="crop-listing">
         <div class="crop-info">
-          <div class="crop-icon">${getCropEmoji(crop.name)}</div>
+          ${crop.imageUrl ? `<img src="${crop.imageUrl}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;" alt="${crop.name}">` : `<div class="crop-icon">${getCropEmoji(crop.name)}</div>`}
           <div>
-            <div class="crop-name">${crop.name} — ${crop.variety}</div>
-            <div class="crop-detail">${crop.quantity} ${crop.unit} · ${App.formatPrice(crop.expectedPrice)}/kg</div>
+            <div class="crop-name">${crop.name} — ${crop.variety||''}</div>
+            <div class="crop-detail">${crop.quantity} ${crop.unit||'kg'} · ${App.formatPrice(crop.expectedPrice)}/kg</div>
           </div>
         </div>
-        <div class="crop-status">
-          ${statusBadge[crop.status] || ''}
-        </div>
+        <div class="crop-status">${statusBadge[crop.status] || ''}</div>
       </div>
     `;
   }).join('');
@@ -246,55 +273,48 @@ function populateMarketQuick() {
 
 function populateRecentOffers() {
   const _t = window.t || ((k) => k);
-  const offers = App.getOffers().slice(0, 4);
+  const offers = _dashOffers.slice(0, 4);
   const container = document.getElementById('recentOffers');
-
   if (!offers.length) {
     container.innerHTML = '<div class="empty-state"><p>No offers yet</p></div>';
     return;
   }
-
-  container.innerHTML = offers.map(offer => {
-    const statusBadge = {
-      pending: `<span class="badge badge-warning">${_t('offers.pending')}</span>`,
-      accepted: `<span class="badge badge-success">${_t('offers.accepted')}</span>`,
-      rejected: `<span class="badge badge-danger">${_t('offers.rejected')}</span>`,
-      countered: `<span class="badge badge-info">${_t('offers.countered')}</span>`
-    };
-
-    return `
-      <div class="crop-listing">
-        <div class="crop-info">
-          <div class="crop-icon">💰</div>
-          <div>
-            <div class="crop-name">${offer.cropName}</div>
-            <div class="crop-detail">${offer.traderName} · ${App.formatPrice(offer.offerPrice)}/kg</div>
-          </div>
+  const statusBadge = {
+    pending:  (v) => `<span class="badge badge-warning">${_t('offers.pending')}</span>`,
+    accepted: (v) => `<span class="badge badge-success">${_t('offers.accepted')}</span>`,
+    rejected: (v) => `<span class="badge badge-danger">${_t('offers.rejected')}</span>`,
+    countered:(v) => `<span class="badge badge-info">${_t('offers.countered')}</span>`
+  };
+  container.innerHTML = offers.map(offer => `
+    <div class="crop-listing">
+      <div class="crop-info">
+        <div class="crop-icon">💰</div>
+        <div>
+          <div class="crop-name">${offer.cropName||''}</div>
+          <div class="crop-detail">${offer.traderName||''} · ${App.formatPrice(offer.offerPrice||0)}/kg</div>
         </div>
-        <div>${statusBadge[offer.status] || ''}</div>
       </div>
-    `;
-  }).join('');
+      <div>${(statusBadge[offer.status] || (() => ''))(offer)}</div>
+    </div>
+  `).join('');
 }
 
 function populateRecentTransactions() {
-  const txns = App.getTransactions();
+  const txns = _dashTxns;
   const container = document.getElementById('recentTransactions');
-
   if (!txns.length) {
     container.innerHTML = '<div class="empty-state"><p>No transactions yet</p></div>';
     return;
   }
-
   container.innerHTML = txns.map(t => `
     <div class="transaction-row">
       <div class="txn-info">
-        <div class="txn-crop">${t.cropName}</div>
-        <div class="txn-trader">${t.traderName} · ${t.quantity} ${t.unit}</div>
+        <div class="txn-crop">${t.cropName||''}</div>
+        <div class="txn-trader">${t.traderName||''} · ${t.quantity||0} ${t.unit||'kg'}</div>
       </div>
       <div style="text-align:right;">
-        <div class="txn-amount">${App.formatPrice(t.netAmount)}</div>
-        <div class="txn-date">${App.formatDate(t.date)}</div>
+        <div class="txn-amount">${App.formatPrice(t.netAmount||0)}</div>
+        <div class="txn-date">${t.date ? App.formatDate(t.date) : ''}</div>
       </div>
     </div>
   `).join('');

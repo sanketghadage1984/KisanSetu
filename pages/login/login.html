@@ -31,8 +31,8 @@
 
       <form id="loginForm" onsubmit="return handleLogin(event)">
         <div class="form-group">
-          <label class="form-label" for="email" data-i18n="auth.emailPhone">Email or Phone</label>
-          <input type="text" id="email" class="form-control" placeholder="Enter email or phone" required>
+          <label class="form-label" for="email" data-i18n="auth.emailPhone">Email</label>
+          <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
         </div>
 
         <div class="form-group">
@@ -50,22 +50,59 @@
           <a href="#" data-i18n="auth.forgotPassword">Forgot password?</a>
         </div>
 
-        <button type="submit" class="btn btn-primary btn-block btn-lg" data-i18n="auth.signIn">Sign In</button>
+        <button type="submit" id="loginBtn" class="btn btn-primary btn-block btn-lg" data-i18n="auth.signIn">Sign In</button>
       </form>
+
+      <!-- Divider -->
+      <div style="display:flex;align-items:center;gap:0.75rem;margin:1.25rem 0;">
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+        <span style="color:var(--text-muted);font-size:0.85rem;">OR</span>
+        <div style="flex:1;height:1px;background:var(--border);"></div>
+      </div>
+
+      <!-- Google Sign-In -->
+      <button id="googleSignInBtn" onclick="handleGoogleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.75rem;padding:0.75rem;border:2px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s;margin-bottom:0.75rem;" onmouseover="this.style.borderColor='#4285F4'" onmouseout="this.style.borderColor='var(--border)'">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" height="22" alt="Google">
+        Continue with Google
+      </button>
+
+      <!-- Phone OTP -->
+      <div id="phoneSection">
+        <button onclick="togglePhoneSection()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:0.75rem;padding:0.75rem;border:2px solid var(--border);border-radius:var(--radius);background:var(--surface);color:var(--text);font-size:0.95rem;font-weight:600;cursor:pointer;transition:all 0.2s;">
+          📱 Sign in with Phone OTP
+        </button>
+        <div id="phoneOtpForm" style="display:none;margin-top:0.75rem;">
+          <div class="form-group">
+            <label class="form-label">Phone Number</label>
+            <input type="tel" id="phoneNumber" class="form-control" placeholder="+91 98765 43210">
+          </div>
+          <div id="recaptcha-container"></div>
+          <button onclick="handleSendOTP()" class="btn btn-outline btn-block" id="sendOtpBtn">Send OTP</button>
+          <div id="otpVerifySection" style="display:none;margin-top:0.75rem;">
+            <div class="form-group">
+              <label class="form-label">Enter 6-digit OTP</label>
+              <input type="number" id="otpCode" class="form-control" placeholder="123456" maxlength="6">
+            </div>
+            <button onclick="handleVerifyOTP()" class="btn btn-primary btn-block">Verify OTP & Login</button>
+          </div>
+        </div>
+      </div>
 
       <div class="auth-footer">
         <span data-i18n="auth.noAccount">Don't have an account?</span> <a href="../register/register.html" data-i18n="auth.createAccount">Create Account</a>
       </div>
-
-      <div class="demo-credentials">
-        <h5 data-i18n="auth.demoTitle">🔑 Demo Login</h5>
-        <p>Email: rajesh@kisansetu.demo</p>
-        <p>Password: any (demo mode)</p>
-        <button class="autofill-btn" onclick="autoFillDemo()">Auto-fill Demo Credentials</button>
-      </div>
     </div>
   </div>
 
+  <!-- Firebase Compat CDN (load before config) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics-compat.js"></script>
+  <!-- KisanSetu Config & Backend -->
+  <script src="../../js/firebase-config.js"></script>
+  <script src="../../js/firebase-backend.js"></script>
+  <!-- App Scripts -->
   <script src="../../js/data.js"></script>
   <script src="../../js/translations.js"></script>
   <script src="../../js/app.js"></script>

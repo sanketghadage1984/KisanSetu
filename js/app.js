@@ -173,8 +173,17 @@ const App = {
   },
 
   logout() {
-    localStorage.setItem('kisansetu_loggedIn', 'false');
-    this.navigateTo('login');
+    // Firebase sign-out — then redirect
+    if (typeof auth !== 'undefined') {
+      auth.signOut().then(() => {
+        localStorage.setItem('kisansetu_loggedIn', 'false');
+        localStorage.removeItem('kisansetu_userType');
+        this.navigateTo('login');
+      });
+    } else {
+      localStorage.setItem('kisansetu_loggedIn', 'false');
+      this.navigateTo('login');
+    }
   },
 
   // ── Navigation ────────────────────────────────────

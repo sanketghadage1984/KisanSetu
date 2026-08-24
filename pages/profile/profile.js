@@ -1,14 +1,23 @@
-// Profile Page Logic
+// Profile Page Logic — Firebase Firestore
 
 document.addEventListener('DOMContentLoaded', () => {
-  initProfilePage();
+  auth.onAuthStateChanged(async user => {
+    if (!user) { App.navigateTo('login'); return; }
+    await initProfilePage(user);
+  });
 
   window.addEventListener('languageChanged', () => {
-    initProfilePage();
+    const userType = App.getUserType();
+    document.getElementById('topNav').innerHTML = `
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
+      ${renderTopNav(userType)}
+    `;
+    App.initNavigation();
+    App.translatePage();
   });
 });
 
-function initProfilePage() {
+async function initProfilePage(user) {
   const userType = App.getUserType();
   document.getElementById('topNav').innerHTML = `
     <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
@@ -19,57 +28,77 @@ function initProfilePage() {
   App.initNavigation();
   App.translatePage();
 
-  populateProfile();
+  // Load profile from Firestore
+  try {
+    const profile = await BackendService.getUserProfile(user.uid);
+    if (profile) populateProfile(profile);
+  } catch (err) {
+    // Fallback to localStorage if offline
+    const localUser = App.getUser();
+    if (localUser) populateProfile(localUser);
+  }
 }
 
-function populateProfile() {
-  const user = App.getUser();
-  if (!user) return;
-
+function populateProfile(user) {
   document.getElementById('profileAvatar').textContent = user.avatar || user.name.charAt(0);
   document.getElementById('profileName').textContent = user.name;
   document.getElementById('profileEmail').textContent = user.email;
   document.getElementById('profileLocation').textContent = '📍 ' + (user.location || 'Not set');
 
-  document.getElementById('name').value = user.name || '';
-  document.getElementById('email').value = user.email || '';
-  document.getElementById('phone').value = user.phone || '';
+  document.getElementById('name').value     = user.name     || '';
+  document.getElementById('email').value    = user.email    || '';
+  document.getElementById('phone').value    = user.phone    || '';
   document.getElementById('location').value = user.location || '';
 }
 
-function saveProfile(e) {
+async function saveProfile(e) {
   e.preventDefault();
 
-  const user = App.getUser();
-  user.name = document.getElementById('name').value.trim();
-  user.email = document.getElementById('email').value.trim();
-  user.phone = document.getElementById('phone').value.trim();
-  user.location = document.getElementById('location').value.trim();
-  user.avatar = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  const firebaseUser = auth.currentUser;
+  if (!firebaseUser) {
+    App.showNotification('Error', 'Not logged in', 'error');
+    return false;
+  }
 
-  const key = App.getUserType() === 'trader' ? 'kisansetu_trader' : 'kisansetu_farmer';
-  localStorage.setItem(key, JSON.stringify(user));
+  const name     = document.getElementById('name').value.trim();
+  const phone    = document.getElementById('phone').value.trim();
+  const location = document.getElementById('location').value.trim();
+  const avatar   = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
-  // Update UI
-  document.getElementById('profileAvatar').textContent = user.avatar;
-  document.getElementById('profileName').textContent = user.name;
-  document.getElementById('profileEmail').textContent = user.email;
-  document.getElementById('profileLocation').textContent = '📍 ' + user.location;
+  const saveBtn = document.querySelector('button[type="submit"]');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving...';
 
-  App.updateNavUser();
-  App.showNotification('Profile Updated', 'Your changes have been saved', 'success');
+  try {
+    // Update Firestore
+    await BackendService.updateUserProfile(firebaseUser.uid, { name, phone, location, avatar });
+    // Update Firebase Auth display name
+    await firebaseUser.updateProfile({ displayName: name });
+
+    // Update header UI
+    document.getElementById('profileAvatar').textContent = avatar;
+    document.getElementById('profileName').textContent   = name;
+    document.getElementById('profileLocation').textContent = '📍 ' + location;
+    App.updateNavUser();
+
+    App.showNotification('Profile Updated ✅', 'Your changes have been saved to cloud', 'success');
+  } catch (err) {
+    App.showNotification('Error', 'Failed to save profile. Check your connection.', 'error');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '💾 Save Changes';
+  }
   return false;
 }
 
 function resetDemo() {
-  if (confirm('Reset all demo data? This will restore original mock data.')) {
+  if (confirm('Reset all local data? This will clear cached data.')) {
     localStorage.removeItem('kisansetu_initialized');
     localStorage.removeItem('kisansetu_crops');
     localStorage.removeItem('kisansetu_offers');
     localStorage.removeItem('kisansetu_transactions');
     localStorage.removeItem('kisansetu_notifications');
-    App.initLocalStorage();
-    App.showNotification('Data Reset', 'Demo data has been restored to defaults', 'success');
+    App.showNotification('Data Reset', 'Local cache cleared', 'success');
     setTimeout(() => location.reload(), 1000);
   }
 }
