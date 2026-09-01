@@ -3,7 +3,15 @@
 
 
 document.addEventListener('DOMContentLoaded', () => {
-  initTradersPage();
+  // Guard: must be logged in to view traders
+  if (typeof auth !== 'undefined') {
+    auth.onAuthStateChanged(user => {
+      if (!user) { App.navigateTo('login'); return; }
+      initTradersPage();
+    });
+  } else {
+    initTradersPage();
+  }
 
   window.addEventListener('languageChanged', () => {
     initTradersPage();

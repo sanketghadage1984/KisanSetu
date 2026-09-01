@@ -1,5 +1,6 @@
 // Register Page Logic — Firebase Auth (Email+Password & Google)
 let selectedUserType = 'farmer';
+let _registerInProgress = false; // Guard to prevent auto-redirect during active registration
 
 document.querySelectorAll('.user-type-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -8,6 +9,16 @@ document.querySelectorAll('.user-type-btn').forEach(btn => {
     selectedUserType = btn.getAttribute('data-type');
   });
 });
+
+// ── Helper: navigate based on user's actual stored role ──────
+function redirectByRole(userType) {
+  const role = userType || localStorage.getItem('kisansetu_userType') || 'farmer';
+  if (role === 'trader') {
+    App.navigateTo('trader-dashboard');
+  } else {
+    App.navigateTo('dashboard');
+  }
+}
 
 // ── Email + Password Registration ───────────────────────────
 async function handleRegister(e) {
@@ -39,6 +50,7 @@ async function handleRegister(e) {
     return false;
   }
 
+  _registerInProgress = true;
   submitBtn.disabled = true;
   submitBtn.textContent = 'Creating Account...';
 
@@ -50,11 +62,10 @@ async function handleRegister(e) {
 
     App.showNotification('Account Created! 🎉', 'Welcome to KisanSetu. Redirecting...', 'success');
     setTimeout(() => {
-      selectedUserType === 'trader'
-        ? App.navigateTo('trader-dashboard')
-        : App.navigateTo('dashboard');
+      redirectByRole(selectedUserType);
     }, 1000);
   } catch (err) {
+    _registerInProgress = false;
     let msg = 'Registration failed. Please try again.';
     if (err.code === 'auth/email-already-in-use') msg = 'An account with this email already exists.';
     if (err.code === 'auth/invalid-email')        msg = 'Please enter a valid email address.';
@@ -69,19 +80,18 @@ async function handleRegister(e) {
 // ── Google Sign-Up ───────────────────────────────────────────
 async function handleGoogleRegister() {
   const btn = document.getElementById('googleRegisterBtn');
+  _registerInProgress = true;
   btn.disabled = true;
   btn.innerHTML = '⏳ Signing up with Google...';
 
   try {
-    await BackendService.loginWithGoogle(selectedUserType);
+    const profile = await BackendService.loginWithGoogle(selectedUserType);
     App.showNotification('Welcome! 🌾', 'Account created with Google!', 'success');
     setTimeout(() => {
-      const userType = localStorage.getItem('kisansetu_userType') || 'farmer';
-      userType === 'trader'
-        ? App.navigateTo('trader-dashboard')
-        : App.navigateTo('dashboard');
+      redirectByRole(profile ? profile.userType : selectedUserType);
     }, 800);
   } catch (err) {
+    _registerInProgress = false;
     let msg = 'Google sign-up failed. Please try again.';
     if (err.code === 'auth/popup-closed-by-user') msg = 'Sign-up cancelled.';
     App.showNotification('Error', msg, 'error');
@@ -90,14 +100,13 @@ async function handleGoogleRegister() {
   }
 }
 
-// Redirect already logged-in users
-auth.onAuthStateChanged(user => {
-  if (user) {
-    const userType = localStorage.getItem('kisansetu_userType') || 'farmer';
-    setTimeout(() => {
-      userType === 'trader'
-        ? App.navigateTo('trader-dashboard')
-        : App.navigateTo('dashboard');
-    }, 300);
+// Redirect already logged-in users (only if not mid-registration)
+auth.onAuthStateChanged(async user => {
+  if (user && !_registerInProgress) {
+    // Wait to let any concurrent auth ops finish
+    await new Promise(r => setTimeout(r, 200));
+    if (!_registerInProgress) {
+      redirectByRole(null);
+    }
   }
 });

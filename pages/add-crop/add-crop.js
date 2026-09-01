@@ -1,9 +1,15 @@
 // Add Crop Page Logic — Firebase + Cloudinary
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Guard: must be logged in
-  auth.onAuthStateChanged(user => {
+  // Guard: must be logged in and be a Farmer
+  auth.onAuthStateChanged(async user => {
     if (!user) { App.navigateTo('login'); return; }
+    // Role guard: Traders cannot add crops
+    const profile = await BackendService.getUserProfile(user.uid).catch(() => null);
+    if (profile && profile.userType === 'trader') {
+      App.navigateTo('trader-dashboard');
+      return;
+    }
     initAddCrop();
   });
 

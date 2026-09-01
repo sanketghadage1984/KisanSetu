@@ -47,7 +47,7 @@
           <label>
             <input type="checkbox" checked> <span data-i18n="auth.rememberMe">Remember me</span>
           </label>
-          <a href="#" data-i18n="auth.forgotPassword">Forgot password?</a>
+          <a href="#" onclick="handleForgotPassword(); return false;" data-i18n="auth.forgotPassword">Forgot password?</a>
         </div>
 
         <button type="submit" id="loginBtn" class="btn btn-primary btn-block btn-lg" data-i18n="auth.signIn">Sign In</button>

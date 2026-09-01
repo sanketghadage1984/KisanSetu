@@ -173,15 +173,30 @@ const App = {
   },
 
   logout() {
-    // Firebase sign-out — then redirect
-    if (typeof auth !== 'undefined') {
+    // Use BackendService.logoutUser if available (clears Firebase + all localStorage)
+    if (typeof BackendService !== 'undefined' && typeof BackendService.logoutUser === 'function') {
+      BackendService.logoutUser().then(() => {
+        this.navigateTo('login');
+      }).catch(() => {
+        localStorage.setItem('kisansetu_loggedIn', 'false');
+        localStorage.removeItem('kisansetu_userType');
+        localStorage.removeItem('kisansetu_farmer');
+        localStorage.removeItem('kisansetu_trader');
+        this.navigateTo('login');
+      });
+    } else if (typeof auth !== 'undefined') {
       auth.signOut().then(() => {
         localStorage.setItem('kisansetu_loggedIn', 'false');
         localStorage.removeItem('kisansetu_userType');
+        localStorage.removeItem('kisansetu_farmer');
+        localStorage.removeItem('kisansetu_trader');
         this.navigateTo('login');
       });
     } else {
       localStorage.setItem('kisansetu_loggedIn', 'false');
+      localStorage.removeItem('kisansetu_userType');
+      localStorage.removeItem('kisansetu_farmer');
+      localStorage.removeItem('kisansetu_trader');
       this.navigateTo('login');
     }
   },

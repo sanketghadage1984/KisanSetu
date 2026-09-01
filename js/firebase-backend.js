@@ -21,22 +21,26 @@ const BackendService = {
     const uid = cred.user.uid;
     await cred.user.updateProfile({ displayName: name });
 
+    const resolvedType = userType || 'farmer';
+    const avatar = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
     const userDoc = {
       uid,
       name,
       email,
       phone: phone || '',
       location: location || '',
-      userType: userType || 'farmer',
-      avatar: name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
+      userType: resolvedType,
+      avatar,
       joined: firebase.firestore.FieldValue.serverTimestamp(),
       photoUrl: ''
     };
 
     await db.collection('users').doc(uid).set(userDoc);
 
-    // Persist userType in localStorage for fast access
-    localStorage.setItem('kisansetu_userType', userType || 'farmer');
+    // Sync to localStorage so App.getUser() works immediately
+    const profileKey = resolvedType === 'trader' ? 'kisansetu_trader' : 'kisansetu_farmer';
+    localStorage.setItem(profileKey, JSON.stringify({ uid, name, email, phone: phone||'', location: location||'', type: resolvedType, avatar, joined: new Date().toISOString().split('T')[0] }));
+    localStorage.setItem('kisansetu_userType', resolvedType);
     localStorage.setItem('kisansetu_loggedIn', 'true');
     return userDoc;
   },
@@ -49,7 +53,20 @@ const BackendService = {
     const cred = await auth.signInWithEmailAndPassword(email, password);
     const profile = await this.getUserProfile(cred.user.uid);
     if (profile) {
-      localStorage.setItem('kisansetu_userType', profile.userType || 'farmer');
+      const resolvedType = profile.userType || 'farmer';
+      // Sync profile to localStorage so App.getUser() and navbar work immediately
+      const profileKey = resolvedType === 'trader' ? 'kisansetu_trader' : 'kisansetu_farmer';
+      const localProfile = {
+        uid: profile.uid || cred.user.uid,
+        name: profile.name || cred.user.displayName || 'User',
+        email: profile.email || email,
+        phone: profile.phone || '',
+        location: profile.location || '',
+        type: resolvedType,
+        avatar: profile.avatar || (profile.name || 'U').charAt(0).toUpperCase()
+      };
+      localStorage.setItem(profileKey, JSON.stringify(localProfile));
+      localStorage.setItem('kisansetu_userType', resolvedType);
       localStorage.setItem('kisansetu_loggedIn', 'true');
     }
     return profile;
@@ -68,29 +85,48 @@ const BackendService = {
 
     // Check if user already has a Firestore profile
     const snap = await db.collection('users').doc(uid).get();
+    let profile = null;
 
     if (!snap.exists) {
       // New Google user → create Firestore profile
       const name = cred.user.displayName || 'User';
+      const resolvedType = userType || 'farmer';
+      const avatar = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
       const userDoc = {
         uid,
         name,
         email: cred.user.email || '',
         phone: cred.user.phoneNumber || '',
         location: '',
-        userType: userType || 'farmer',
-        avatar: name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2),
+        userType: resolvedType,
+        avatar,
         joined: firebase.firestore.FieldValue.serverTimestamp(),
         photoUrl: cred.user.photoURL || ''
       };
       await db.collection('users').doc(uid).set(userDoc);
-      localStorage.setItem('kisansetu_userType', userType || 'farmer');
+      profile = userDoc;
+      const profileKey = resolvedType === 'trader' ? 'kisansetu_trader' : 'kisansetu_farmer';
+      localStorage.setItem(profileKey, JSON.stringify({ uid, name, email: cred.user.email||'', phone: '', location: '', type: resolvedType, avatar }));
+      localStorage.setItem('kisansetu_userType', resolvedType);
     } else {
-      localStorage.setItem('kisansetu_userType', snap.data().userType || 'farmer');
+      profile = snap.data();
+      const resolvedType = profile.userType || 'farmer';
+      const profileKey = resolvedType === 'trader' ? 'kisansetu_trader' : 'kisansetu_farmer';
+      const localProfile = {
+        uid: profile.uid || uid,
+        name: profile.name || cred.user.displayName || 'User',
+        email: profile.email || cred.user.email || '',
+        phone: profile.phone || '',
+        location: profile.location || '',
+        type: resolvedType,
+        avatar: profile.avatar || (profile.name || 'U').charAt(0).toUpperCase()
+      };
+      localStorage.setItem(profileKey, JSON.stringify(localProfile));
+      localStorage.setItem('kisansetu_userType', resolvedType);
     }
 
     localStorage.setItem('kisansetu_loggedIn', 'true');
-    return snap.exists ? snap.data() : null;
+    return profile;
   },
 
   // ─────────────────────────────────────────────────────────────
@@ -103,10 +139,16 @@ const BackendService = {
    * @param {string} recaptchaContainerId - ID of div element for reCAPTCHA
    */
   async sendPhoneOTP(phoneNumber, recaptchaContainerId) {
+    // Clear any previous reCAPTCHA instance to avoid duplicate widget errors
+    if (window._kisanRecaptchaVerifier) {
+      try { window._kisanRecaptchaVerifier.clear(); } catch(e) {}
+      window._kisanRecaptchaVerifier = null;
+    }
     const recaptchaVerifier = new firebase.auth.RecaptchaVerifier(recaptchaContainerId, {
       size: 'invisible',
       callback: () => {}
     });
+    window._kisanRecaptchaVerifier = recaptchaVerifier;
     const confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, recaptchaVerifier);
     // Store temporarily for step 2
     window._kisanPhoneConfirmation = confirmationResult;
@@ -152,8 +194,26 @@ const BackendService = {
 
   async logoutUser() {
     await auth.signOut();
+    // Clear all auth-related localStorage keys
     localStorage.setItem('kisansetu_loggedIn', 'false');
     localStorage.removeItem('kisansetu_userType');
+    localStorage.removeItem('kisansetu_farmer');
+    localStorage.removeItem('kisansetu_trader');
+    localStorage.removeItem('kisansetu_initialized');
+    window._kisanPhoneConfirmation = null;
+    if (window._kisanRecaptchaVerifier) {
+      try { window._kisanRecaptchaVerifier.clear(); } catch(e) {}
+      window._kisanRecaptchaVerifier = null;
+    }
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // AUTH — Password Reset
+  // ─────────────────────────────────────────────────────────────
+
+  async sendPasswordReset(email) {
+    if (!email) throw new Error('Email is required');
+    await auth.sendPasswordResetEmail(email);
   },
 
   // ─────────────────────────────────────────────────────────────

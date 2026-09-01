@@ -4,8 +4,24 @@ let _allListings = [];
 let _unsubscribeListings = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  auth.onAuthStateChanged(user => {
+  auth.onAuthStateChanged(async user => {
     if (!user) { App.navigateTo('login'); return; }
+    // Role guard: Farmers must go to their own dashboard
+    const profile = await BackendService.getUserProfile(user.uid).catch(() => null);
+    if (profile && profile.userType === 'farmer') {
+      App.navigateTo('dashboard');
+      return;
+    }
+    // Sync profile to localStorage in case it was cleared
+    if (profile) {
+      localStorage.setItem('kisansetu_trader', JSON.stringify({
+        uid: profile.uid, name: profile.name, email: profile.email,
+        phone: profile.phone || '', location: profile.location || '',
+        type: 'trader', avatar: profile.avatar || profile.name.charAt(0)
+      }));
+      localStorage.setItem('kisansetu_userType', 'trader');
+      localStorage.setItem('kisansetu_loggedIn', 'true');
+    }
     initTraderDashboard(user);
   });
 

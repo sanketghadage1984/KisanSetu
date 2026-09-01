@@ -75,6 +75,12 @@ async function saveProfile(e) {
     // Update Firebase Auth display name
     await firebaseUser.updateProfile({ displayName: name });
 
+    // Sync to localStorage so App.getUser() & navbar shows updated name
+    const userType = App.getUserType();
+    const profileKey = userType === 'trader' ? 'kisansetu_trader' : 'kisansetu_farmer';
+    const existing = JSON.parse(localStorage.getItem(profileKey) || '{}');
+    localStorage.setItem(profileKey, JSON.stringify({ ...existing, name, phone, location, avatar }));
+
     // Update header UI
     document.getElementById('profileAvatar').textContent = avatar;
     document.getElementById('profileName').textContent   = name;
