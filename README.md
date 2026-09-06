@@ -18,7 +18,8 @@
   - **Trader Dashboard**: Search crops by category/state, place offers, review transaction records.
   - **Direct Negotiation**: Send custom counter-offers directly to farmers.
 - 📱 **Mobile-First & Responsive**: Full glassmorphic UI, responsive bottom navigation bar on mobile, slide-out drawer menus, and rich micro-interactions.
-- ⚡ **Zero-Config Pure Web Tech**: Built purely with HTML5, modern CSS3, and modular Vanilla JavaScript — no build steps or heavy dependencies required.
+- 🌙 **Dark Mode**: Full dark theme support with one-click toggle.
+- ⚡ **Zero-Config Pure Web Tech**: Built purely with HTML5, modern CSS3, and modular Vanilla JavaScript.
 
 ---
 
@@ -37,7 +38,10 @@ KisanSetu/
 ├── js/
 │   ├── app.js                    # Global application core (auth, storage, toast, modal, i18n)
 │   ├── data.js                   # Mock database seeds (crops, traders, mandi prices, offers)
-│   └── translations.js           # Multi-language dictionary (English, Hindi, Marathi)
+│   ├── translations.js           # Multi-language dictionary (English, Hindi, Marathi)
+│   ├── crop-icons.js             # Centralized crop emoji mappings
+│   ├── firebase-config.js        # 🔥 Firebase + Cloudinary configuration (backend branch only)
+│   └── firebase-backend.js       # 🔥 Firebase Auth, Firestore CRUD service (backend branch only)
 │
 └── pages/                        # Individual portal pages
     ├── add-crop/                 # Add new crop listing (form + image preview + validation)
@@ -53,83 +57,185 @@ KisanSetu/
 
 ---
 
-## 🚀 Quick Start (Running Locally)
+## 🔀 Branch Guide — Which Branch to Use?
 
-Because **KisanSetu** uses vanilla web standards, you don't need `npm install` or complex build pipelines!
+This project has **two branches** for different use cases:
 
-### Option 1: Double-Click to Open
-Simply double-click `index.html` or open it directly in Google Chrome, Microsoft Edge, Firefox, or Safari.
-
-### Option 2: Using VS Code Live Server (Recommended)
-1. Open this repository in **VS Code**.
-2. Install the **Live Server** extension (by Ritwick Dey).
-3. Right-click `index.html` and click **"Open with Live Server"**.
-
-### Option 3: Using Node.js or Python Local Server
-```bash
-# Using Python 3:
-python -m http.server 3000
-
-# Or using Node npx:
-npx serve .
-```
-Then visit `http://localhost:3000` in your browser.
+| Branch | What's Inside | When to Use |
+|:-------|:-------------|:------------|
+| **`main`** | ✅ Frontend-only (HTML + CSS + JS + localStorage) | Quick demo, no setup needed, works offline |
+| **`backend`** | ✅ Frontend + Firebase Auth + Firestore Database + Cloudinary Image Upload | Full working app with real login, real database, cloud images |
 
 ---
 
-## 👥 How to Push to GitHub & Collaborate with Friends
+## 🚀 Quick Start — Frontend Only (`main` branch)
 
-### 1. Initialize Git and Push to Your GitHub
+> **No setup, no accounts, no database needed.** Just open and run!  
+> Uses `localStorage` for demo data. Everything runs in the browser.
+
+### Step 1: Clone the repo
 ```bash
-# 1. Initialize git in this folder
-git init
+git clone https://github.com/sanketghadage1984/KisanSetu.git
+cd KisanSetu
+```
+> ℹ️ This automatically gives you the `main` (frontend-only) branch.
 
-# 2. Stage all files
-git add .
+### Step 2: Run it
 
-# 3. Create initial commit
-git commit -m "Initial commit of KisanSetu platform"
+**Option A — Just double-click:**  
+Open `index.html` directly in Chrome / Edge / Firefox.
 
-# 4. Rename default branch to main
-git branch -M main
+**Option B — Local server (recommended):**
+```bash
+# Using Node.js:
+npx -y serve .
 
-# 5. Link your GitHub repository (replace YOUR_USERNAME and REPO_NAME)
-git remote add origin https://github.com/YOUR_USERNAME/KisanSetu.git
+# Or using Python:
+python -m http.server 3000
+```
+Then visit **http://localhost:3000**
 
-# 6. Push to GitHub
-git push -u origin main
+### Step 3: Explore
+- Click **"Join as Farmer"** or **"Join as Trader"** on the landing page
+- Use any name/email to register (it's stored locally in your browser)
+- Dashboard will show **pre-loaded demo data** — crops, offers, market prices
+- Try switching languages (EN / हिं / मरा) and dark mode 🌙
+
+### Demo Credentials (Frontend Mode)
+> No real login needed — just fill any name and email to register.  
+> Demo data (crops, traders, offers) is automatically loaded.
+
+---
+
+## 🔥 Quick Start — Frontend + Backend (`backend` branch)
+
+> **Full working app** with Firebase Authentication (Email, Google, Phone OTP), Firestore real-time database, and Cloudinary image uploads.
+
+### Step 1: Clone and switch to `backend` branch
+```bash
+git clone https://github.com/sanketghadage1984/KisanSetu.git
+cd KisanSetu
+git checkout backend
 ```
 
-### 2. Giving Your Friends Access to Make Changes
-1. Go to your repository on **GitHub.com**.
-2. Click **Settings** (top tab) ➔ **Collaborators** (left sidebar).
-3. Click **"Add people"** and search for your friend's GitHub username or email.
-4. Once they accept the email invitation, they have full push & pull access!
-
-### 3. Workflow for Your Friends / Collaborators
+### Step 2: Run a local server
 ```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/KisanSetu.git
+# Using Node.js:
+npx -y serve .
+
+# Or using Python:
+python -m http.server 3000
+```
+Then visit **http://localhost:3000**
+
+### Step 3: Register / Login
+- Click **"Join as Farmer"** or **"Join as Trader"**
+- **Register** with a real email + password, or use **Google Sign-In**
+- On first login, **demo data is automatically seeded** into your account (crops, offers, market prices) — so the dashboard looks populated!
+
+### Step 4: Test the Features
+| Feature | How to Test |
+|:--------|:-----------|
+| **Add Crop** | Go to Dashboard → "➕ Add Crop" → Fill form → Upload image → Submit (saves to Firestore + Cloudinary) |
+| **Browse Traders** | Go to Traders page → Select a crop → See ranked traders → Make a deal |
+| **Offers & Negotiation** | Go to Offers → Accept / Reject / Counter-offer incoming bids |
+| **Trader View** | Register as Trader → See farmer crop listings → Send purchase offers |
+| **Market Rates** | Go to Market page → Filter by state/crop → See price trends |
+| **Language Switch** | Click EN / हिं / मरा in the top bar → entire UI translates instantly |
+| **Dark Mode** | Click 🌙 in the top bar |
+
+### What's Different in Backend Branch?
+| Feature | `main` (Frontend) | `backend` (Full Stack) |
+|:--------|:-------------------|:----------------------|
+| Authentication | Fake local login | Firebase Auth (Email, Google, Phone OTP) |
+| Database | localStorage (browser only) | Firestore (cloud, real-time sync) |
+| Image Upload | No upload | Cloudinary CDN with auto-compression |
+| Data Persistence | Lost if browser cache is cleared | Permanent cloud storage |
+| Multi-Device Sync | ❌ | ✅ Real-time across all devices |
+| Demo Data | Pre-loaded from data.js | Auto-seeded to Firestore on first login |
+
+---
+
+## 🧪 Testing Checklist for Friends
+
+Use this checklist when testing:
+
+### Frontend (`main` branch)
+- [ ] Landing page loads with hero banner and market ticker
+- [ ] Register as Farmer → Dashboard shows demo crops
+- [ ] Register as Trader → Trader dashboard shows crop listings
+- [ ] Switch language (EN → Hindi → Marathi) — all text changes
+- [ ] Toggle dark mode 🌙
+- [ ] Add a new crop from Dashboard
+- [ ] Browse Traders → Make a deal → Check Offers page
+- [ ] Mobile responsive — resize browser to phone width
+
+### Backend (`backend` branch)
+- [ ] All frontend tests above ✅
+- [ ] Register with real email + password → Login works
+- [ ] Google Sign-In works (popup opens, signs in)
+- [ ] Dashboard auto-populates with demo data on first login
+- [ ] Add Crop with image → Image uploads to Cloudinary
+- [ ] Make offer from Traders page → Shows in Offers page
+- [ ] Accept/Reject/Counter-offer works
+- [ ] Open in 2 different browsers → Data syncs in real-time
+
+---
+
+## 👥 How to Collaborate
+
+### For Friends: Clone & Test
+```bash
+# 1. Clone the repo
+git clone https://github.com/sanketghadage1984/KisanSetu.git
 cd KisanSetu
 
-# 2. Create a new branch for their feature/fix
+# 2. Test frontend-only (default):
+npx -y serve .
+
+# 3. Test with backend:
+git checkout backend
+npx -y serve .
+```
+
+### For Contributors: Make Changes
+```bash
+# 1. Create a branch for your feature/fix
 git checkout -b feature/my-new-feature
 
-# 3. Make changes and test in the browser
+# 2. Make changes and test in the browser
 
-# 4. Commit and push their branch
+# 3. Commit and push
 git add .
 git commit -m "Added new feature: XYZ"
 git push origin feature/my-new-feature
 
-# 5. Create a Pull Request (PR) on GitHub for review and merge!
+# 4. Create a Pull Request (PR) on GitHub!
 ```
+
+### Adding Collaborators
+1. Go to the repository on **GitHub.com**
+2. Click **Settings** → **Collaborators** → **Add people**
+3. Search for your friend's GitHub username or email
+4. Once they accept the invitation, they can push & pull!
 
 ---
 
 ## 📖 Deep-Dive Codebase Guide
 
 For a complete breakdown of every file, function, state variable, and step-by-step instructions on how to add new features, please read **[CODE_GUIDE.md](./CODE_GUIDE.md)**!
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|:------|:-----------|
+| **Frontend** | HTML5, CSS3 (Custom Properties, Glassmorphism), Vanilla JavaScript ES6+ |
+| **Backend** | Firebase Auth, Cloud Firestore, Firebase Analytics |
+| **Image CDN** | Cloudinary (auto-compressed uploads) |
+| **Internationalization** | Custom i18n system (EN, HI, MR) |
+| **Hosting** | Any static host (GitHub Pages, Netlify, Vercel, or local) |
 
 ---
 
