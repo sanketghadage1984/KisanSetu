@@ -325,6 +325,13 @@ function quickDeal(cropId, traderId) {
   setTimeout(() => App.navigateTo('offers'), 800);
 }
 
+function getCropEmoji(name) {
+  const map = {
+    'onion': '🧅', 'tomato': '🍅', 'wheat': '🌾', 'potato': '🥔',
+    'soybean': '🫘', 'rice': '🍚', 'sugarcane': '🎋', 'grapes': '🍇',
+    'pomegranate': '🫐', 'cotton': '☁️', 'maize': '🌽', 'chickpea': '🫘'
+  };
+  return map[name.toLowerCase()] || '🌱';
+}
 
-// getCropEmoji is now provided by the centralized crop-icons.js
-
+window.getCropEmoji = getCropEmoji;

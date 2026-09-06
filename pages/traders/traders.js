@@ -1,6 +1,12 @@
 // Nearby Traders Page Logic
-// getCropEmoji is now provided by the centralized crop-icons.js
 
+const cropEmojiMap = {
+  'onion': '🧅', 'tomato': '🍅', 'wheat': '🌾', 'potato': '🥔',
+  'soybean': '🫘', 'rice': '🍚', 'sugarcane': '🎋', 'grapes': '🍇'
+};
+function getCropEmoji(name) {
+  return cropEmojiMap[name.toLowerCase()] || '🌱';
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   initTradersPage();
@@ -35,7 +41,7 @@ function populateCropSelector() {
   crops.forEach(crop => {
     const opt = document.createElement('option');
     opt.value = crop.id;
-    opt.textContent = `${crop.name} — ${crop.variety} (${crop.quantity} kg)`;
+    opt.textContent = `${getCropEmoji(crop.name)} ${crop.name} — ${crop.variety} (${crop.quantity} kg)`;
     if (crop.id === selected) opt.selected = true;
     select.appendChild(opt);
   });

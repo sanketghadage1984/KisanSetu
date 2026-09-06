@@ -1,7 +1,19 @@
+<<<<<<< HEAD
 // Trader Dashboard Logic — Firebase Firestore real-time listings
 
 let _allListings = [];
 let _unsubscribeListings = null;
+=======
+// Trader Dashboard Logic
+
+const cropEmojiMap = {
+  'onion': '🧅', 'tomato': '🍅', 'wheat': '🌾', 'potato': '🥔',
+  'soybean': '🫘', 'rice': '🍚', 'sugarcane': '🎋', 'grapes': '🍇'
+};
+function getCropEmoji(name) {
+  return cropEmojiMap[name.toLowerCase()] || '🌱';
+}
+>>>>>>> parent of b40a222 (Update crop icons, add dark mode, and fix animations)
 
 document.addEventListener('DOMContentLoaded', () => {
   auth.onAuthStateChanged(user => {

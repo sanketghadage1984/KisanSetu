@@ -1,8 +1,8 @@
 /* Traders page specific styles */
 
 .crop-selector-card {
-  background: var(--card-bg-gradient);
-  border: 1px solid var(--border);
+  background: linear-gradient(135deg, #f0fdf4, #ffffff);
+  border: 1px solid var(--primary-100);
 }
 
 .traders-grid {
@@ -46,9 +46,8 @@
 }
 
 .comparison-highlight {
-  background: var(--recommend-bg);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--recommend-border);
+  background: var(--accent-50);
+  border: 1px solid var(--accent-light);
   border-radius: var(--radius);
   padding: 0.75rem 1rem;
   margin-top: 0.75rem;
@@ -65,7 +64,7 @@
 .comparison-highlight .value {
   font-size: 1.15rem;
   font-weight: 800;
-  color: var(--recommend-text);
+  color: var(--accent-dark);
 }
 
 @media (max-width: 768px) {

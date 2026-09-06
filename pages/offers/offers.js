@@ -119,8 +119,13 @@ function renderOffers() {
         ${messages ? `<div class="offer-conversation">${messages}</div>` : ''}
 
         ${canAct ? `
+<<<<<<< HEAD
         <div class="counter-offer-input" style="margin-top:1rem;">
           <input type="number" id="counter_${offerId}" class="form-control" placeholder="${_t('offers.counterPlaceholder')}" step="0.5" min="1">
+=======
+        <div class="counter-offer-input">
+          <input type="number" id="counter_${offer.id}" placeholder="${_t('offers.counterPlaceholder')}" step="0.5" min="1">
+>>>>>>> parent of b40a222 (Update crop icons, add dark mode, and fix animations)
         </div>
         <div class="offer-actions-row">
           <button class="btn btn-success btn-sm" onclick="acceptOffer('${offerId}')">✅ ${_t('offers.accept')}</button>
