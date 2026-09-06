@@ -1410,7 +1410,7 @@ tr:hover td { background: var(--bg); }
 
 .search-box input {
   width: 100%;
-  padding: 0.7rem 1rem 0.7rem 2.75rem;
+  padding: 0.7rem 1rem 0.7rem 3rem;
   border: 2px solid var(--border);
   border-radius: var(--radius);
   font-size: 0.9rem;
@@ -1425,11 +1425,13 @@ tr:hover td { background: var(--bg); }
 
 .search-box .search-icon {
   position: absolute;
-  left: 0.9rem;
+  left: 0.85rem;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--text-muted);
+  pointer-events: none;
+  line-height: 1;
 }
 
 .filter-select {

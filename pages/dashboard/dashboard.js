@@ -58,10 +58,21 @@ function initDashboard(user) {
 
   document.getElementById('farmerName').textContent = (user.displayName || user.name || 'Farmer').split(' ')[0];
 
+  let _firstCropLoad = true;
+
   // Real-time listener — Farmer's crops
   if (_unsubCrops) _unsubCrops();
   _unsubCrops = BackendService.listenToCrops(user.uid, (crops) => {
     _dashCrops = crops;
+
+    // Auto-seed demo data on first login if account is empty
+    if (_firstCropLoad && crops.length === 0) {
+      _firstCropLoad = false;
+      BackendService.seedDemoData(user.uid).catch(e => console.warn('Auto-seed failed:', e));
+      return; // Listener will fire again once seed data is written
+    }
+    _firstCropLoad = false;
+
     populateStats();
     populateBestTrader();
     populateCrops();
@@ -102,7 +113,10 @@ function populateStats() {
 
 function populateBestTrader() {
   const _t = window.t || ((k) => k);
-  const crops = App.getCrops().filter(c => c.status === 'active');
+  const activeCrops = (_dashCrops && _dashCrops.length) 
+    ? _dashCrops.filter(c => c.status === 'active') 
+    : App.getCrops().filter(c => c.status === 'active');
+  const crops = activeCrops;
   if (!crops.length) {
     document.getElementById('bestTraderSection').innerHTML = `
       <div class="card" style="text-align:center; padding:2rem;">
@@ -217,7 +231,7 @@ function populateBestTrader() {
       </div>
 
       <div class="best-trader-actions">
-        <a href="../traders/traders.html" class="btn btn-primary">${_t('dash.viewTrader')}</a>
+        <a href="../traders/traders.html?trader=${trader.id}" class="btn btn-primary">${_t('dash.viewTrader')}</a>
         <button class="btn btn-accent" onclick="quickDeal('${crop.id}', '${trader.id}')">${_t('dash.makeDeal')}</button>
         <a href="../traders/traders.html" class="btn btn-outline">${_t('dash.compareAll')}</a>
       </div>
@@ -336,8 +350,68 @@ function populateRecentTransactions() {
   `).join('');
 }
 
-function quickDeal(cropId, traderId) {
-  App.showNotification('Deal Initiated', 'Redirecting to offers page...', 'success');
+async function quickDeal(cropId, traderId) {
+  const trader = KisanSetuData.traders.find(t => t.id === traderId) || { name: 'Verified Trader', offers: {} };
+  const crops = _dashCrops.length ? _dashCrops : App.getCrops();
+  const crop = crops.find(c => c.id === cropId) || { name: 'Crop', variety: '', quantity: 1000 };
+  const offer = (trader.offers && trader.offers[cropId]) ? trader.offers[cropId] : { pricePerKg: crop.expectedPrice || 30, quantityNeeded: crop.quantity || 1000, transportCost: 1200 };
+  const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+
+  const newOffer = {
+    id: App.generateId('offer'),
+    cropId: cropId,
+    cropName: `${crop.name} (${crop.variety || ''})`,
+    farmerId: user ? user.uid : 'farmer_current',
+    farmerName: user ? (user.displayName || 'Farmer') : 'Farmer',
+    traderId: traderId,
+    traderName: trader.name,
+    offerPrice: offer.pricePerKg,
+    quantity: Math.min(offer.quantityNeeded || 1000, crop.quantity || 1000),
+    unit: 'kg',
+    status: 'accepted',
+    date: new Date().toISOString().split('T')[0],
+    messages: [
+      { 
+        from: 'farmer', 
+        text: `Deal accepted at ₹${offer.pricePerKg}/kg`, 
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+      }
+    ],
+    createdAt: (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
+  };
+
+  // 1. Save to local state
+  const offers = App.getOffers() || [];
+  offers.unshift(newOffer);
+  App.saveOffers(offers);
+  localStorage.setItem('kisansetu_real_offers', JSON.stringify(offers));
+
+  // 2. Save to Firestore
+  if (user && typeof db !== 'undefined') {
+    try {
+      await db.collection('offers').doc(newOffer.id).set(newOffer);
+      const txnRef = db.collection('transactions').doc();
+      await txnRef.set({
+        offerId: newOffer.id,
+        cropId: cropId,
+        cropName: newOffer.cropName,
+        farmerId: user.uid,
+        traderId: traderId,
+        traderName: trader.name,
+        quantity: newOffer.quantity,
+        unit: 'kg',
+        price: offer.pricePerKg,
+        totalAmount: offer.pricePerKg * newOffer.quantity,
+        netAmount: Math.max(0, (offer.pricePerKg * newOffer.quantity) - (offer.transportCost || 1200)),
+        date: firebase.firestore.FieldValue.serverTimestamp(),
+        status: 'completed'
+      });
+    } catch(err) {
+      console.warn('quickDeal Firestore write warning:', err);
+    }
+  }
+
+  App.showNotification('Deal Accepted! 🎉', `Deal initiated with ${trader.name} at ₹${offer.pricePerKg}/kg`, 'success');
   setTimeout(() => App.navigateTo('offers'), 800);
 }
 

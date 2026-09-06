@@ -17,7 +17,9 @@ const App = {
 
   // ── LocalStorage Helpers ──────────────────────────
   initLocalStorage() {
-    if (!localStorage.getItem('kisansetu_initialized')) {
+    // Only seed demo data if there's no real Firebase user logged in
+    const isRealUser = typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser;
+    if (!localStorage.getItem('kisansetu_initialized') && !isRealUser) {
       localStorage.setItem('kisansetu_farmer', JSON.stringify(KisanSetuData.defaultFarmer));
       localStorage.setItem('kisansetu_trader', JSON.stringify(KisanSetuData.defaultTrader));
       localStorage.setItem('kisansetu_crops', JSON.stringify(KisanSetuData.farmerCrops));
@@ -26,6 +28,20 @@ const App = {
       localStorage.setItem('kisansetu_notifications', JSON.stringify(KisanSetuData.notifications));
       localStorage.setItem('kisansetu_lang', 'en');
       localStorage.setItem('kisansetu_initialized', 'true');
+    }
+    // If a real user is logged in, clear demo offers so they don't pollute the badge/counts
+    if (isRealUser) {
+      const storedOffers = localStorage.getItem('kisansetu_offers');
+      if (storedOffers) {
+        try {
+          const offers = JSON.parse(storedOffers);
+          // If these are demo offers (with demo IDs like 'offer_001'), remove them
+          const hasDemoOffers = offers.some(o => o.id && o.id.startsWith('offer_'));
+          if (hasDemoOffers) {
+            localStorage.setItem('kisansetu_offers', JSON.stringify([]));
+          }
+        } catch(e) {}
+      }
     }
   },
 
@@ -449,14 +465,32 @@ const App = {
 
     const traders = KisanSetuData.traders;
     const results = [];
+    const cropLower = (crop.name || '').toLowerCase();
 
     traders.forEach(trader => {
-      const offer = trader.offers[cropId];
+      let offer = trader.offers ? trader.offers[cropId] : null;
+      if (!offer && crop.name && trader.offers) {
+        const matchingKey = Object.keys(trader.offers).find(k => {
+          const sample = KisanSetuData.farmerCrops.find(fc => fc.id === k);
+          return sample && sample.name.toLowerCase() === cropLower;
+        });
+        if (matchingKey) {
+          offer = trader.offers[matchingKey];
+        } else {
+          const market = KisanSetuData.marketPrices.find(m => m.crop.toLowerCase() === cropLower);
+          const basePrice = market ? market.modalPrice : (crop.expectedPrice || 30);
+          offer = {
+            pricePerKg: Math.round(basePrice * (0.95 + (trader.rating - 4) * 0.05)),
+            quantityNeeded: crop.quantity || 1000,
+            transportCost: Math.round(trader.distance * 40 + 500)
+          };
+        }
+      }
       if (!offer) return;
 
       const grossReturn = offer.pricePerKg * Math.min(offer.quantityNeeded, crop.quantity);
       const netReturn = grossReturn - offer.transportCost;
-      const quantityMatch = Math.min(offer.quantityNeeded, crop.quantity) / crop.quantity;
+      const quantityMatch = Math.min(offer.quantityNeeded, crop.quantity) / (crop.quantity || 1);
 
       const maxDistance = 50;
       const distanceScore = Math.max(0, (maxDistance - trader.distance) / maxDistance);
@@ -498,7 +532,17 @@ const App = {
 function renderDashboardSidebar(currentPage, userType) {
   const base = App.getBasePath();
   const isFarmer = userType !== 'trader';
-  const unreadCount = App.getNotifications().filter(n => !n.read).length;
+  const isRealUser = Boolean(firebase.auth && firebase.auth().currentUser);
+  
+  // Real authenticated users: only show count from kisansetu_real_offers (set by Firestore listener)
+  // Default to 0 until the Firestore listener fires and populates real data
+  let pendingOffersCount = 0;
+  if (isRealUser) {
+    try {
+      const userOffers = JSON.parse(localStorage.getItem('kisansetu_real_offers') || '[]');
+      pendingOffersCount = userOffers.filter(o => o.status === 'pending' || (!isFarmer && o.status === 'countered')).length;
+    } catch(e) { pendingOffersCount = 0; }
+  }
   const _t = window.t || ((k) => k);
 
   const farmerLinks = `
@@ -521,7 +565,7 @@ function renderDashboardSidebar(currentPage, userType) {
       </a>
       <a href="${base}pages/offers/offers.html" class="sidebar-link ${currentPage === 'offers' ? 'active' : ''}" data-page="offers">
         <span class="icon">💰</span> <span data-i18n="side.offers">${_t('side.offers')}</span>
-        ${unreadCount > 0 ? `<span class="link-badge notif-badge">${unreadCount}</span>` : ''}
+        ${pendingOffersCount > 0 ? `<span class="link-badge notif-badge">${pendingOffersCount}</span>` : ''}
       </a>
     </div>
     <div class="sidebar-section">
@@ -549,7 +593,7 @@ function renderDashboardSidebar(currentPage, userType) {
       <div class="sidebar-title" data-i18n="side.trade">${_t('side.trade')}</div>
       <a href="${base}pages/offers/offers.html" class="sidebar-link ${currentPage === 'offers' ? 'active' : ''}" data-page="offers">
         <span class="icon">💰</span> <span data-i18n="side.offers">${_t('side.offers')}</span>
-        ${unreadCount > 0 ? `<span class="link-badge notif-badge">${unreadCount}</span>` : ''}
+        ${pendingOffersCount > 0 ? `<span class="link-badge notif-badge">${pendingOffersCount}</span>` : ''}
       </a>
     </div>
     <div class="sidebar-section">

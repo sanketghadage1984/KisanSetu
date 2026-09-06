@@ -113,41 +113,65 @@ function compressImage(file, options = {}) {
 }
 
 // ============================================================
-//  HELPER 2: Upload image to Cloudinary
+//  HELPER 2: Upload image to Cloudinary (with Timeout & Fallback)
 //  Automatically compresses the image first to save storage!
-//  Returns: secure CDN URL string or null on failure
+//  Returns: secure CDN URL string or Base64 data URL on failure/timeout
 // ============================================================
 async function uploadImageToCloudinary(file) {
   if (!file) return null;
   if (CLOUDINARY_CONFIG.cloudName === 'YOUR_CLOUDINARY_CLOUD_NAME') {
-    console.warn('⚠️ Cloudinary Cloud Name not set. Image upload skipped.');
-    return null;
+    console.warn('⚠️ Cloudinary Cloud Name not set.');
+    return readFileAsDataUrl(file);
   }
 
   // 🔥 Step 1: Compress first (free tier saver!)
-  const compressedFile = await compressImage(file, {
-    maxWidth:  800,   // max 800px wide
-    maxHeight: 800,   // max 800px tall
-    quality:   0.72   // 72% JPEG quality
-  });
+  let compressedFile = file;
+  try {
+    compressedFile = await compressImage(file, {
+      maxWidth:  800,   // max 800px wide
+      maxHeight: 800,   // max 800px tall
+      quality:   0.72   // 72% JPEG quality
+    });
+  } catch(e) {
+    console.warn('Image compression skipped, using original:', e);
+  }
 
-  // 🔥 Step 2: Upload the compressed file
+  // 🔥 Step 2: Upload with an 8-second timeout so it never hangs
   const formData = new FormData();
   formData.append('file', compressedFile);
   formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
   formData.append('folder', 'kisansetu/crops');
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
   try {
     const res = await fetch(
       `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`,
-      { method: 'POST', body: formData }
+      { method: 'POST', body: formData, signal: controller.signal }
     );
+    clearTimeout(timeoutId);
     const data = await res.json();
-    if (data.secure_url) return data.secure_url;
-    console.error('❌ Cloudinary upload error:', data.error?.message);
-    return null;
+    if (data && data.secure_url) {
+      console.log('✅ Uploaded to Cloudinary:', data.secure_url);
+      return data.secure_url;
+    }
+    console.warn('⚠️ Cloudinary response had no secure_url (preset may not be unsigned):', data?.error?.message);
+    return await readFileAsDataUrl(compressedFile);
   } catch (err) {
-    console.error('❌ Cloudinary upload failed:', err);
-    return null;
+    clearTimeout(timeoutId);
+    console.warn('⚠️ Cloudinary upload timed out or failed, falling back to local storage preview:', err);
+    return await readFileAsDataUrl(compressedFile);
   }
+}
+
+// Fallback helper to convert file to data URL so crop listing always succeeds
+function readFileAsDataUrl(file) {
+  return new Promise((resolve) => {
+    if (!file) return resolve(null);
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.onerror = () => resolve(null);
+    reader.readAsDataURL(file);
+  });
 }

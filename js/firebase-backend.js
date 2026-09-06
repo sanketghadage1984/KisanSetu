@@ -289,19 +289,33 @@ const BackendService = {
    * Get crops from Firestore, optionally filtered by farmerId
    * Returns an array of crop objects
    */
+  /**
+   * Get crops from Firestore, optionally filtered by farmerId
+   * Returns an array of crop objects
+   */
   async getCrops(filters = {}) {
-    let query = db.collection('crops');
+    try {
+      let query = db.collection('crops');
 
-    if (filters.farmerId) {
-      query = query.where('farmerId', '==', filters.farmerId);
-    }
-    if (filters.status) {
-      query = query.where('status', '==', filters.status);
-    }
+      if (filters.farmerId) {
+        query = query.where('farmerId', '==', filters.farmerId);
+      }
+      if (filters.status) {
+        query = query.where('status', '==', filters.status);
+      }
 
-    query = query.orderBy('createdAt', 'desc').limit(filters.limit || 50);
-    const snap = await query.get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const snap = await query.limit(filters.limit || 50).get();
+      const crops = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      crops.sort((a, b) => {
+        const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+        const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+        return tB - tA;
+      });
+      return crops;
+    } catch (err) {
+      console.warn('getCrops error:', err);
+      return App.getCrops() || [];
+    }
   },
 
   /**
@@ -311,10 +325,17 @@ const BackendService = {
   listenToCrops(farmerId, callback) {
     return db.collection('crops')
       .where('farmerId', '==', farmerId)
-      .orderBy('createdAt', 'desc')
       .onSnapshot(snap => {
         const crops = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        crops.sort((a, b) => {
+          const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+          const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+          return tB - tA;
+        });
         callback(crops);
+      }, err => {
+        console.warn('listenToCrops snapshot error:', err);
+        callback(App.getCrops() || []);
       });
   },
 
@@ -324,14 +345,22 @@ const BackendService = {
   listenToAllCrops(callback, filters = {}) {
     let query = db.collection('crops').where('status', '==', 'active');
     if (filters.cropName) query = query.where('name', '==', filters.cropName);
-    return query.orderBy('createdAt', 'desc').limit(50).onSnapshot(snap => {
+    return query.limit(50).onSnapshot(snap => {
       const crops = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      crops.sort((a, b) => {
+        const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+        const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+        return tB - tA;
+      });
       callback(crops);
+    }, err => {
+      console.warn('listenToAllCrops error:', err);
+      callback([]);
     });
   },
 
   async updateCropStatus(cropId, status) {
-    await db.collection('crops').doc(cropId).update({ status });
+    await db.collection('crops').doc(cropId).set({ status }, { merge: true });
   },
 
   // ─────────────────────────────────────────────────────────────
@@ -345,11 +374,20 @@ const BackendService = {
     const user = auth.currentUser;
     if (!user) throw new Error('Not authenticated');
 
-    const profile = await this.getUserProfile(user.uid);
+    const traderProfile = await this.getUserProfile(user.uid);
+    // Fetch farmer's phone for contact buttons
+    let farmerPhone = '';
+    if (offerData.farmerId) {
+      const farmerProfile = await this.getUserProfile(offerData.farmerId).catch(() => null);
+      farmerPhone = farmerProfile?.phone || '';
+    }
+
     const doc = {
       ...offerData,
       traderId: user.uid,
-      traderName: profile?.name || user.displayName || 'Trader',
+      traderName: traderProfile?.name || user.displayName || 'Trader',
+      traderPhone: traderProfile?.phone || '',
+      farmerPhone: farmerPhone,
       status: 'pending',
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       messages: [
@@ -368,12 +406,22 @@ const BackendService = {
    * Get offers — for a farmer (their crops' offers) or a trader (their sent offers)
    */
   async getOffers(uid, userType) {
-    const field = userType === 'trader' ? 'traderId' : 'farmerId';
-    const snap = await db.collection('offers')
-      .where(field, '==', uid)
-      .orderBy('createdAt', 'desc')
-      .get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    try {
+      const field = userType === 'trader' ? 'traderId' : 'farmerId';
+      const snap = await db.collection('offers')
+        .where(field, '==', uid)
+        .get();
+      const offers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      offers.sort((a, b) => {
+        const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : (a.date ? new Date(a.date).getTime() : 0));
+        const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : (b.date ? new Date(b.date).getTime() : 0));
+        return tB - tA;
+      });
+      return offers;
+    } catch (err) {
+      console.warn('getOffers error:', err);
+      return App.getOffers() || [];
+    }
   },
 
   /**
@@ -383,19 +431,27 @@ const BackendService = {
     const field = userType === 'trader' ? 'traderId' : 'farmerId';
     return db.collection('offers')
       .where(field, '==', uid)
-      .orderBy('createdAt', 'desc')
       .onSnapshot(snap => {
         const offers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        offers.sort((a, b) => {
+          const tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : (a.date ? new Date(a.date).getTime() : 0));
+          const tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : (b.date ? new Date(b.date).getTime() : 0));
+          return tB - tA;
+        });
         callback(offers);
+      }, err => {
+        console.warn('listenToOffers error (falling back to local):', err);
+        callback(App.getOffers() || []);
       });
   },
 
   async acceptOffer(offerId, offerData) {
     const batch = db.batch();
 
-    // Update offer status
+    // Update offer status safely with merge
     const offerRef = db.collection('offers').doc(offerId);
-    batch.update(offerRef, {
+    batch.set(offerRef, {
+      ...offerData,
       status: 'accepted',
       messages: firebase.firestore.FieldValue.arrayUnion({
         from: 'farmer',
@@ -403,37 +459,46 @@ const BackendService = {
         time: new Date().toLocaleString()
       }),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    }, { merge: true });
 
     // Update crop status to 'sold'
     if (offerData.cropId) {
       const cropRef = db.collection('crops').doc(offerData.cropId);
-      batch.update(cropRef, { status: 'sold' });
+      batch.set(cropRef, { status: 'sold' }, { merge: true });
     }
 
     // Create transaction record
     const txnRef = db.collection('transactions').doc();
     batch.set(txnRef, {
       offerId,
-      cropId: offerData.cropId,
-      cropName: offerData.cropName,
-      farmerId: offerData.farmerId,
-      traderId: offerData.traderId,
-      traderName: offerData.traderName,
-      quantity: offerData.quantity,
+      cropId: offerData.cropId || '',
+      cropName: offerData.cropName || '',
+      farmerId: offerData.farmerId || (auth.currentUser ? auth.currentUser.uid : ''),
+      traderId: offerData.traderId || '',
+      traderName: offerData.traderName || '',
+      quantity: offerData.quantity || 0,
       unit: offerData.unit || 'kg',
-      price: offerData.offerPrice,
-      totalAmount: offerData.offerPrice * offerData.quantity,
-      netAmount: (offerData.offerPrice * offerData.quantity) - 1500,
+      price: offerData.offerPrice || 0,
+      totalAmount: (offerData.offerPrice || 0) * (offerData.quantity || 0),
+      netAmount: Math.max(0, ((offerData.offerPrice || 0) * (offerData.quantity || 0)) - 1500),
       date: firebase.firestore.FieldValue.serverTimestamp(),
       status: 'completed'
     });
 
     await batch.commit();
+
+    // Update localStorage immediately
+    const offers = App.getOffers() || [];
+    const idx = offers.findIndex(o => o.id === offerId);
+    if (idx !== -1) {
+      offers[idx].status = 'accepted';
+      App.saveOffers(offers);
+    }
   },
 
   async rejectOffer(offerId, offerData) {
-    await db.collection('offers').doc(offerId).update({
+    await db.collection('offers').doc(offerId).set({
+      ...offerData,
       status: 'rejected',
       messages: firebase.firestore.FieldValue.arrayUnion({
         from: 'farmer',
@@ -441,11 +506,19 @@ const BackendService = {
         time: new Date().toLocaleString()
       }),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    }, { merge: true });
+
+    const offers = App.getOffers() || [];
+    const idx = offers.findIndex(o => o.id === offerId);
+    if (idx !== -1) {
+      offers[idx].status = 'rejected';
+      App.saveOffers(offers);
+    }
   },
 
   async counterOffer(offerId, counterPrice, offerData) {
-    await db.collection('offers').doc(offerId).update({
+    await db.collection('offers').doc(offerId).set({
+      ...offerData,
       status: 'countered',
       farmerCounterPrice: counterPrice,
       messages: firebase.firestore.FieldValue.arrayUnion({
@@ -454,7 +527,15 @@ const BackendService = {
         time: new Date().toLocaleString()
       }),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    }, { merge: true });
+
+    const offers = App.getOffers() || [];
+    const idx = offers.findIndex(o => o.id === offerId);
+    if (idx !== -1) {
+      offers[idx].status = 'countered';
+      offers[idx].farmerCounterPrice = counterPrice;
+      App.saveOffers(offers);
+    }
   },
 
   // ─────────────────────────────────────────────────────────────
@@ -462,11 +543,21 @@ const BackendService = {
   // ─────────────────────────────────────────────────────────────
 
   async getTransactions(uid) {
-    const snap = await db.collection('transactions')
-      .where('farmerId', '==', uid)
-      .orderBy('date', 'desc')
-      .get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    try {
+      const snap = await db.collection('transactions')
+        .where('farmerId', '==', uid)
+        .get();
+      const txns = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      txns.sort((a, b) => {
+        const tA = a.date?.toMillis ? a.date.toMillis() : (a.date?.seconds ? a.date.seconds * 1000 : 0);
+        const tB = b.date?.toMillis ? b.date.toMillis() : (b.date?.seconds ? b.date.seconds * 1000 : 0);
+        return tB - tA;
+      });
+      return txns;
+    } catch(err) {
+      console.warn('getTransactions error:', err);
+      return App.getTransactions() || [];
+    }
   },
 
   // ─────────────────────────────────────────────────────────────
@@ -511,9 +602,10 @@ const BackendService = {
   },
 
   /**
-   * 🌱 Seed ALL demo data into Firestore (crops + offers + market prices)
-   * Run ONCE in browser console: BackendService.seedDemoData('YOUR_FIREBASE_UID')
-   * Get your UID from Firebase Console → Authentication → Users
+   * 🌱 Auto-seed demo data into Firestore for a new user
+   * Prevents duplicate seeding via localStorage flag.
+   * Called automatically on first login when the user has 0 crops.
+   * Can also be called manually: BackendService.seedDemoData()
    */
   async seedDemoData(farmerUid, traderUid) {
     if (typeof KisanSetuData === 'undefined') {
@@ -521,45 +613,63 @@ const BackendService = {
       return;
     }
 
-    if (!farmerUid) {
-      console.error('❌ Please pass your Firebase UID: BackendService.seedDemoData("your-uid-here")');
+    // Auto-detect UID from current auth user if not provided
+    const uid = farmerUid || (auth.currentUser ? auth.currentUser.uid : null);
+    if (!uid) {
+      console.error('❌ No user UID available. Please log in first.');
+      return;
+    }
+
+    // Prevent re-seeding: check localStorage flag
+    const seedKey = 'kisansetu_demo_seeded_' + uid;
+    if (localStorage.getItem(seedKey) === 'true') {
+      console.log('ℹ️ Demo data already seeded for this user.');
       return;
     }
 
     console.log('🌱 Seeding demo data to Firestore...');
+    const userName = auth.currentUser?.displayName || KisanSetuData.defaultFarmer.name;
+
     const batch = db.batch();
 
-    // 1. Seed Crops
+    // 1. Seed Crops (assigned to the current user)
     KisanSetuData.farmerCrops.forEach(crop => {
       const ref = db.collection('crops').doc();
       batch.set(ref, {
         ...crop,
-        farmerId:   farmerUid,
-        farmerName: KisanSetuData.defaultFarmer.name,
+        farmerId:   uid,
+        farmerName: userName,
         imageUrl:   null,
         createdAt:  firebase.firestore.FieldValue.serverTimestamp()
       });
     });
 
-    // 2. Seed Market Prices
+    // 2. Seed Market Prices (only if collection is empty — shared data)
     KisanSetuData.marketPrices.forEach(price => {
       const ref = db.collection('market_prices').doc();
       batch.set(ref, { ...price, seededAt: firebase.firestore.FieldValue.serverTimestamp() });
     });
 
-    // 3. Seed Offers (link to farmer)
+    // 3. Seed Offers (linked to the current user as farmer)
     KisanSetuData.offers.forEach(offer => {
       const ref = db.collection('offers').doc();
       batch.set(ref, {
         ...offer,
-        farmerId:  farmerUid,
-        traderId:  traderUid || 'demo_trader',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        farmerId:    uid,
+        farmerName:  userName,
+        traderId:    traderUid || 'demo_trader',
+        traderName:  offer.traderName || 'Demo Trader',
+        traderPhone: '',
+        farmerPhone: '',
+        createdAt:   firebase.firestore.FieldValue.serverTimestamp()
       });
     });
 
     await batch.commit();
-    console.log('✅ Demo data seeded! Refresh your dashboard.');
+
+    // Mark as seeded so it doesn't run again
+    localStorage.setItem(seedKey, 'true');
+    console.log('✅ Demo data seeded! Dashboard will update automatically.');
   }
 
 };

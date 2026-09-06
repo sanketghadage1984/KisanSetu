@@ -50,10 +50,21 @@ function initTraderDashboard(user) {
 
   document.getElementById('traderName').textContent = user.displayName?.split(' ')[0] || 'Trader';
 
+  let _firstListingLoad = true;
+
   // Real-time listener for all active crops from Firestore
   if (_unsubscribeListings) _unsubscribeListings();
   _unsubscribeListings = BackendService.listenToAllCrops((crops) => {
     _allListings = crops;
+
+    // Auto-seed demo crops if marketplace is empty (for demo/guest users)
+    if (_firstListingLoad && crops.length === 0) {
+      _firstListingLoad = false;
+      BackendService.seedDemoData(user.uid).catch(e => console.warn('Auto-seed failed:', e));
+      return; // Listener will fire again once seed data is written
+    }
+    _firstListingLoad = false;
+
     document.getElementById('listingCount').textContent = crops.length;
     renderListings();
   });
