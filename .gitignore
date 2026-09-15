@@ -20,3 +20,9 @@ yarn-error.log*
 node_modules/
 dist/
 build/
+.vercel
+
+# Python cache
+__pycache__/
+*.py[cod]
+

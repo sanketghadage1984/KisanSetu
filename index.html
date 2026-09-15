@@ -3,8 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="KisanSetu — Digital bridge between farmers and traders. Find the best trader and get a fair price for your crops.">
+  <meta name="description" content="KisanSetu — Digital bridge between farmers and traders. AI-powered price prediction, spoilage risk analysis, live mandi rates, blockchain traceability, and government scheme matching.">
+  <meta name="theme-color" content="#2D6A4F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KisanSetu">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
   <title>KisanSetu — Find Best Trader. Get Fair Price.</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
+  <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -34,6 +41,7 @@
   <section class="hero">
     <div class="hero-content container">
       <div class="hero-badge" data-i18n="hero.badge">🌱 Digital Bridge for Farmers & Traders</div>
+      <div class="shree-anna-badge">🌾 Shree Anna Mission — Millet Value Chain Supported</div>
       <h1>
         <span data-i18n="hero.title1">Find the </span><span class="highlight" data-i18n="hero.titleHighlight">Best Trader.</span><br>
         <span data-i18n="hero.title2">Get a </span><span class="accent" data-i18n="hero.titleAccent">Fair Price.</span>
@@ -165,6 +173,36 @@
           <h4 data-i18n="feat.6Title">Verified Traders</h4>
           <p data-i18n="feat.6Text">Trade with confidence — verified traders are vetted for reliability and fair practices.</p>
         </div>
+        <div class="feature-card animate-fade stagger-1">
+          <div class="feature-icon">🧪</div>
+          <h4>AI Spoilage Risk Predictor</h4>
+          <p>Our AI predicts crop spoilage risk based on temperature, shelf life, storage conditions, and transit time — so you sell before quality drops.</p>
+        </div>
+        <div class="feature-card animate-fade stagger-2">
+          <div class="feature-icon">🔗</div>
+          <h4>Blockchain Traceability</h4>
+          <p>Every crop gets a unique blockchain hash and QR code. Track the full journey from farm to buyer with tamper-proof records.</p>
+        </div>
+        <div class="feature-card animate-fade stagger-3">
+          <div class="feature-icon">🏦</div>
+          <h4>Escrow Payments</h4>
+          <p>Secure escrow smart contract locks buyer funds until delivery is confirmed. No more payment disputes or defaults.</p>
+        </div>
+        <div class="feature-card animate-fade stagger-4">
+          <div class="feature-icon">🏛️</div>
+          <h4>Government Scheme Matcher</h4>
+          <p>Instantly check eligibility for PM-KISAN, PMFBY, KCC, Millet Mission & 10+ schemes. Apply with one click.</p>
+        </div>
+        <div class="feature-card animate-fade stagger-5">
+          <div class="feature-icon">🌦️</div>
+          <h4>Live Weather + Harvest Planner</h4>
+          <p>Real-time weather data feeds into our AI to optimize harvest timing and reduce crop losses from rain and heat.</p>
+        </div>
+        <div class="feature-card animate-fade stagger-6">
+          <div class="feature-icon">👥</div>
+          <h4>Farmer Community Forum</h4>
+          <p>Ask questions, share tips, and learn from thousands of farmers. Get expert advice on pricing, crop care, and schemes.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -274,6 +312,11 @@
   <script src="js/crop-icons.js"></script>
   <script src="js/data.js"></script>
   <script src="js/translations.js"></script>
+  <script src="js/ai-engine.js"></script>
+  <script src="js/mandi-api.js"></script>
+  <script src="js/blockchain.js"></script>
+  <script src="js/govt-schemes.js"></script>
+  <script src="js/weather.js"></script>
   <script src="js/app.js"></script>
   <script>
     window.addEventListener('scroll', () => {

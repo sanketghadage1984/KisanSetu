@@ -165,6 +165,7 @@ auth.onAuthStateChanged(async user => {
   if (user && !_loginInProgress) {
     // Wait a tick to allow BackendService.loginUser to finish writing to localStorage
     await new Promise(r => setTimeout(r, 200));
+    await BackendService.seedDemoData(user.uid, localStorage.getItem('kisansetu_userType') || 'farmer').catch(() => {});
     // Now read role from localStorage (set by loginUser/loginWithGoogle)
     redirectByRole(null);
   }

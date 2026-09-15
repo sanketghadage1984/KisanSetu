@@ -60,7 +60,7 @@ function initTraderDashboard(user) {
     // Auto-seed demo crops if marketplace is empty (for demo/guest users)
     if (_firstListingLoad && crops.length === 0) {
       _firstListingLoad = false;
-      BackendService.seedDemoData(user.uid).catch(e => console.warn('Auto-seed failed:', e));
+      BackendService.seedDemoData(user.uid, 'trader').catch(e => console.warn('Auto-seed failed:', e));
       return; // Listener will fire again once seed data is written
     }
     _firstListingLoad = false;

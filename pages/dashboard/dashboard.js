@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════════════
 // KisanSetu — Farmer Dashboard Logic (Firebase Firestore)
 // ═══════════════════════════════════════════════════════
+/* global App, BackendService, auth, renderTopNav, renderDashboardSidebar, renderBottomNav, getCropEmoji, KisanSetuData */
 
 let _dashCrops = [], _dashOffers = [], _dashTxns = [];
 let _unsubCrops = null, _unsubOffers = null;
@@ -29,12 +30,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   window.addEventListener('languageChanged', () => {
     const userType = App.getUserType();
-    document.getElementById('topNav').innerHTML = `
-      <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
-      ${renderTopNav(userType)}
-    `;
-    App.initNavigation();
-    App.translatePage();
+    const topNav = document.getElementById('topNav');
+    if (topNav && typeof renderTopNav === 'function') {
+      topNav.innerHTML = `
+        <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
+        ${renderTopNav(userType)}
+      `;
+    }
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && typeof renderDashboardSidebar === 'function') {
+      sidebar.innerHTML = renderDashboardSidebar('dashboard', userType);
+    }
+    const bottomNav = document.getElementById('bottomNav');
+    if (bottomNav && typeof renderBottomNav === 'function') {
+      bottomNav.innerHTML = renderBottomNav('dashboard', userType);
+    }
+    if (App && typeof App.initNavigation === 'function') {
+      App.initNavigation();
+    }
+    if (App && typeof App.translatePage === 'function') {
+      App.translatePage();
+    }
+    populateStats();
     populateBestTrader();
     populateCrops();
     populateMarketQuick();
@@ -45,16 +62,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initDashboard(user) {
   const userType = App.getUserType();
-  document.getElementById('topNav').innerHTML = `
-    <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
-    ${renderTopNav(userType)}
-  `;
-  document.getElementById('sidebar').innerHTML = renderDashboardSidebar('dashboard', userType);
-  document.getElementById('bottomNav').innerHTML = renderBottomNav('dashboard', userType);
+  const topNav = document.getElementById('topNav');
+  if (topNav && typeof renderTopNav === 'function') {
+    topNav.innerHTML = `
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
+      ${renderTopNav(userType)}
+    `;
+  }
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar && typeof renderDashboardSidebar === 'function') {
+    sidebar.innerHTML = renderDashboardSidebar('dashboard', userType);
+  }
+  const bottomNav = document.getElementById('bottomNav');
+  if (bottomNav && typeof renderBottomNav === 'function') {
+    bottomNav.innerHTML = renderBottomNav('dashboard', userType);
+  }
 
   // Re-init nav after injecting
-  App.initNavigation();
-  App.translatePage();
+  if (App && typeof App.initNavigation === 'function') {
+    App.initNavigation();
+  }
+  if (App && typeof App.translatePage === 'function') {
+    App.translatePage();
+  }
 
   document.getElementById('farmerName').textContent = (user.displayName || user.name || 'Farmer').split(' ')[0];
 
@@ -68,7 +98,7 @@ function initDashboard(user) {
     // Auto-seed demo data on first login if account is empty
     if (_firstCropLoad && crops.length === 0) {
       _firstCropLoad = false;
-      BackendService.seedDemoData(user.uid).catch(e => console.warn('Auto-seed failed:', e));
+      BackendService.seedDemoData(user.uid, 'farmer').catch(e => console.warn('Auto-seed failed:', e));
       return; // Listener will fire again once seed data is written
     }
     _firstCropLoad = false;
@@ -97,6 +127,84 @@ function initDashboard(user) {
   });
 
   populateMarketQuick();
+
+  // ── New SIH Feature Widgets ──────────────────────
+  populateWeatherWidget();
+  populateGovtSchemes();
+  populateAISpoilageAlerts();
+}
+
+// ── Weather Widget ─────────────────────────────────
+async function populateWeatherWidget() {
+  const container = document.getElementById('weatherWidget');
+  if (!container || typeof WeatherService === 'undefined') return;
+
+  const user = App.getUser();
+  const location = user?.location || '';
+
+  try {
+    const weather = await WeatherService.fetchWeather(location);
+    container.innerHTML = WeatherService.renderWidget(weather);
+
+    // Feed temperature to AI Engine for future spoilage calculations
+    window._currentWeather = weather;
+  } catch (err) {
+    console.warn('[Dashboard] Weather widget failed:', err);
+  }
+}
+
+// ── Government Schemes Widget ──────────────────────
+function populateGovtSchemes() {
+  const container = document.getElementById('govtSchemesWidget');
+  if (!container || typeof GovtSchemes === 'undefined') return;
+
+  const user = App.getUser();
+  const crops = _dashCrops.map(c => c.name || c.crop || '');
+  const eligible = GovtSchemes.checkEligibility(user || {}, crops);
+  container.innerHTML = GovtSchemes.renderWidget(eligible, 3);
+}
+
+// ── AI Spoilage Alerts ─────────────────────────────
+function populateAISpoilageAlerts() {
+  const container = document.getElementById('aiSpoilageAlerts');
+  if (!container || typeof AIEngine === 'undefined') return;
+
+  const activeCrops = _dashCrops.filter(c => c.status === 'active');
+  if (!activeCrops.length) { container.innerHTML = ''; return; }
+
+  // Check each active crop for spoilage risk
+  const alerts = activeCrops.map(crop => {
+    const risk = AIEngine.predictSpoilageRisk({
+      cropName: crop.name || crop.crop,
+      harvestDate: crop.harvestDate,
+      condition: crop.condition || 'Good',
+      temperatureC: window._currentWeather?.avgTemperature
+    });
+    return { crop, risk };
+  }).filter(a => a.risk.riskLevel === 'High' || a.risk.riskLevel === 'Critical');
+
+  if (!alerts.length) { container.innerHTML = ''; return; }
+
+  container.innerHTML = `
+    <div class="ai-analysis-card" style="margin-bottom:1.25rem;">
+      <div class="ai-analysis-header">
+        <h4>⚠️ Spoilage Risk Alerts</h4>
+        <span class="ai-badge">AI Powered</span>
+      </div>
+      ${alerts.map(a => `
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--border-light);">
+          <span style="font-size:1.5rem;">${typeof getCropEmoji === 'function' ? getCropEmoji(a.crop.name || a.crop.crop) : '🌾'}</span>
+          <div style="flex:1;">
+            <div style="font-weight:600;">${a.crop.name || a.crop.crop}</div>
+            <div class="text-sm text-muted">${a.risk.recommendations[0] || ''}</div>
+          </div>
+          <span style="background:${a.risk.riskColor};color:white;padding:0.2rem 0.6rem;border-radius:var(--radius-full);font-size:0.75rem;font-weight:700;">
+            ${a.risk.riskLevel} (${a.risk.riskPercent}%)
+          </span>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 function populateStats() {

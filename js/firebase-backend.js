@@ -42,6 +42,9 @@ const BackendService = {
     localStorage.setItem(profileKey, JSON.stringify({ uid, name, email, phone: phone||'', location: location||'', type: resolvedType, avatar, joined: new Date().toISOString().split('T')[0] }));
     localStorage.setItem('kisansetu_userType', resolvedType);
     localStorage.setItem('kisansetu_loggedIn', 'true');
+
+    // Auto-seed demo data for new user
+    await this.seedDemoData(uid, resolvedType).catch(e => console.warn('Seed on register warning:', e));
     return userDoc;
   },
 
@@ -69,6 +72,11 @@ const BackendService = {
       localStorage.setItem('kisansetu_userType', resolvedType);
       localStorage.setItem('kisansetu_loggedIn', 'true');
     }
+
+    // Auto-seed demo data if user account is empty
+    const uid = cred.user.uid;
+    const resolvedType = profile ? (profile.userType || 'farmer') : 'farmer';
+    await this.seedDemoData(uid, resolvedType).catch(e => console.warn('Seed on login warning:', e));
     return profile;
   },
 
@@ -126,6 +134,7 @@ const BackendService = {
     }
 
     localStorage.setItem('kisansetu_loggedIn', 'true');
+    await this.seedDemoData(uid, profile ? profile.userType : userType).catch(e => console.warn('Seed on Google login warning:', e));
     return profile;
   },
 
@@ -184,6 +193,7 @@ const BackendService = {
 
     localStorage.setItem('kisansetu_userType', userType || snap.data()?.userType || 'farmer');
     localStorage.setItem('kisansetu_loggedIn', 'true');
+    await this.seedDemoData(uid, userType || snap.data()?.userType || 'farmer').catch(e => console.warn('Seed on OTP warning:', e));
     window._kisanPhoneConfirmation = null;
     return snap.exists ? snap.data() : null;
   },
@@ -602,74 +612,176 @@ const BackendService = {
   },
 
   /**
-   * 🌱 Auto-seed demo data into Firestore for a new user
+   * 🌱 Auto-seed rich demo data into Firestore & localStorage for any user who logs in
+   * Seeds:
+   *  - Farmer: 4 Active Crops, 5 Incoming Offers, 2 Completed Transactions (₹57,500), Mandi prices
+   *  - Trader: Marketplace Crops, Sent Offers, Completed Deals, Mandi prices
    * Prevents duplicate seeding via localStorage flag.
-   * Called automatically on first login when the user has 0 crops.
-   * Can also be called manually: BackendService.seedDemoData()
    */
-  async seedDemoData(farmerUid, traderUid) {
+  async seedDemoData(targetUid, role) {
     if (typeof KisanSetuData === 'undefined') {
       console.error('KisanSetuData not loaded.');
       return;
     }
 
-    // Auto-detect UID from current auth user if not provided
-    const uid = farmerUid || (auth.currentUser ? auth.currentUser.uid : null);
+    const currentUser = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    const uid = targetUid || (currentUser ? currentUser.uid : null);
     if (!uid) {
-      console.error('❌ No user UID available. Please log in first.');
+      console.warn('No user UID available for demo data seeding.');
       return;
     }
 
-    // Prevent re-seeding: check localStorage flag
+    const resolvedRole = role || localStorage.getItem('kisansetu_userType') || 'farmer';
+    const userName = (currentUser && (currentUser.displayName || currentUser.email))
+      ? (currentUser.displayName || currentUser.email.split('@')[0])
+      : (resolvedRole === 'trader' ? KisanSetuData.defaultTrader.name : KisanSetuData.defaultFarmer.name);
+
+    // Prevent duplicate seeding for this user
     const seedKey = 'kisansetu_demo_seeded_' + uid;
     if (localStorage.getItem(seedKey) === 'true') {
       console.log('ℹ️ Demo data already seeded for this user.');
       return;
     }
 
-    console.log('🌱 Seeding demo data to Firestore...');
-    const userName = auth.currentUser?.displayName || KisanSetuData.defaultFarmer.name;
+    console.log(`🌱 Seeding demo data for ${resolvedRole} (${userName})...`);
 
-    const batch = db.batch();
+    // 1. Sync rich demo data immediately to localStorage so UI displays records with zero latency
+    if (resolvedRole === 'farmer') {
+      localStorage.setItem('kisansetu_crops', JSON.stringify(KisanSetuData.farmerCrops));
+      localStorage.setItem('kisansetu_offers', JSON.stringify(KisanSetuData.offers));
+      localStorage.setItem('kisansetu_transactions', JSON.stringify(KisanSetuData.transactions));
+      localStorage.setItem('kisansetu_real_offers', JSON.stringify(KisanSetuData.offers));
+    } else {
+      localStorage.setItem('kisansetu_crops', JSON.stringify(KisanSetuData.farmerCrops));
+      const traderOffers = KisanSetuData.offers.map(o => ({
+        ...o,
+        traderId: uid,
+        traderName: userName,
+        status: o.status === 'accepted' ? 'accepted' : 'pending'
+      }));
+      localStorage.setItem('kisansetu_offers', JSON.stringify(traderOffers));
+      localStorage.setItem('kisansetu_transactions', JSON.stringify(KisanSetuData.transactions));
+      localStorage.setItem('kisansetu_real_offers', JSON.stringify(traderOffers));
+    }
 
-    // 1. Seed Crops (assigned to the current user)
-    KisanSetuData.farmerCrops.forEach(crop => {
-      const ref = db.collection('crops').doc();
-      batch.set(ref, {
-        ...crop,
-        farmerId:   uid,
-        farmerName: userName,
-        imageUrl:   null,
-        createdAt:  firebase.firestore.FieldValue.serverTimestamp()
-      });
-    });
+    // 2. If Firestore is active, seed documents directly to Firestore
+    if (typeof db !== 'undefined' && db && typeof db.batch === 'function') {
+      try {
+        const batch = db.batch();
 
-    // 2. Seed Market Prices (only if collection is empty — shared data)
-    KisanSetuData.marketPrices.forEach(price => {
-      const ref = db.collection('market_prices').doc();
-      batch.set(ref, { ...price, seededAt: firebase.firestore.FieldValue.serverTimestamp() });
-    });
+        if (resolvedRole === 'farmer') {
+          // A. Farmer's own crops
+          const createdCropIds = [];
+          KisanSetuData.farmerCrops.forEach((crop, idx) => {
+            const cropRef = db.collection('crops').doc();
+            createdCropIds.push(cropRef.id);
+            batch.set(cropRef, {
+              ...crop,
+              id: cropRef.id,
+              farmerId: uid,
+              farmerName: userName,
+              imageUrl: crop.image || null,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
 
-    // 3. Seed Offers (linked to the current user as farmer)
-    KisanSetuData.offers.forEach(offer => {
-      const ref = db.collection('offers').doc();
-      batch.set(ref, {
-        ...offer,
-        farmerId:    uid,
-        farmerName:  userName,
-        traderId:    traderUid || 'demo_trader',
-        traderName:  offer.traderName || 'Demo Trader',
-        traderPhone: '',
-        farmerPhone: '',
-        createdAt:   firebase.firestore.FieldValue.serverTimestamp()
-      });
-    });
+          // B. Offers received on farmer's crops from verified traders
+          KisanSetuData.offers.forEach((offer, idx) => {
+            const offerRef = db.collection('offers').doc();
+            const matchingCropId = createdCropIds[idx % createdCropIds.length] || offer.cropId;
+            batch.set(offerRef, {
+              ...offer,
+              id: offerRef.id,
+              cropId: matchingCropId,
+              farmerId: uid,
+              farmerName: userName,
+              traderId: offer.traderId || 'trader_101',
+              traderName: offer.traderName || 'ABC Traders',
+              traderPhone: '+91 98231 44556',
+              farmerPhone: '',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
 
-    await batch.commit();
+          // C. Completed transactions for the farmer (Revenue: ₹57,500)
+          KisanSetuData.transactions.forEach(txn => {
+            const txnRef = db.collection('transactions').doc();
+            batch.set(txnRef, {
+              ...txn,
+              id: txnRef.id,
+              farmerId: uid,
+              farmerName: userName,
+              traderName: txn.traderName || 'Mahalaxmi Trading Co.',
+              status: 'completed',
+              date: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
 
-    // Mark as seeded so it doesn't run again
+        } else {
+          // Trader Role:
+          // A. Marketplace crops available for traders to discover
+          KisanSetuData.farmerCrops.forEach((crop, idx) => {
+            const cropRef = db.collection('crops').doc();
+            batch.set(cropRef, {
+              ...crop,
+              id: cropRef.id,
+              farmerId: 'demo_farmer_' + (idx + 1),
+              farmerName: idx % 2 === 0 ? 'Ramesh Patil' : 'Suresh Deshmukh',
+              imageUrl: crop.image || null,
+              status: 'active',
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+
+          // B. Offers sent by this trader
+          KisanSetuData.offers.slice(0, 3).forEach((offer, idx) => {
+            const offerRef = db.collection('offers').doc();
+            batch.set(offerRef, {
+              ...offer,
+              id: offerRef.id,
+              farmerId: 'demo_farmer_' + (idx + 1),
+              farmerName: idx % 2 === 0 ? 'Ramesh Patil' : 'Suresh Deshmukh',
+              traderId: uid,
+              traderName: userName,
+              traderPhone: '',
+              status: idx === 0 ? 'pending' : (idx === 1 ? 'countered' : 'accepted'),
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+
+          // C. Trader transactions
+          KisanSetuData.transactions.forEach(txn => {
+            const txnRef = db.collection('transactions').doc();
+            batch.set(txnRef, {
+              ...txn,
+              id: txnRef.id,
+              traderId: uid,
+              traderName: userName,
+              farmerName: 'Ramesh Patil',
+              status: 'completed',
+              date: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+        }
+
+        // D. Shared Mandi Prices
+        KisanSetuData.marketPrices.forEach(price => {
+          const priceRef = db.collection('market_prices').doc();
+          batch.set(priceRef, {
+            ...price,
+            seededAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+
+        await batch.commit();
+        console.log(`✅ Demo data successfully committed to Firestore for ${resolvedRole}!`);
+      } catch (err) {
+        console.warn('Firestore demo seed warning (localStorage active):', err);
+      }
+    }
+
     localStorage.setItem(seedKey, 'true');
-    console.log('✅ Demo data seeded! Dashboard will update automatically.');
+    console.log('✅ Demo data ready. Dashboard will update automatically.');
   }
 
 };
