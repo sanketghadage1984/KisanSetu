@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile & Settings — KisanSetu</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👤</text></svg>">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+  <nav class="top-nav" id="topNav"></nav>
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="dashboard-layout">
+    <div class="page-content" style="max-width:760px;">
+      <div class="dashboard-header">
+        <div>
+          <h1 class="dashboard-title" data-i18n="profile.title">👤 Profile & Settings</h1>
+          <p class="dashboard-subtitle" data-i18n="profile.subtitle">Manage your account, contact details, and mandi alert preferences</p>
+        </div>
+      </div>
+
+      <!-- Profile Hero Banner -->
+      <div class="profile-hero">
+        <div class="profile-avatar-large" id="profileAvatar">KS</div>
+        <div>
+          <h2 id="profileName" style="font-size:1.3rem; margin-bottom:0.25rem;">Farmer Name</h2>
+          <div id="profileEmail" style="color:var(--text-muted); font-size:0.85rem;">farmer@kisansetu.in</div>
+          <div id="profileLocation" style="color:var(--primary); font-size:0.82rem; font-weight:600; margin-top:0.2rem;">📍 Not set</div>
+        </div>
+      </div>
+
+      <!-- Personal Details Form -->
+      <div class="card animate-fade" style="margin-bottom:1.5rem;">
+        <h3 style="font-size:1.05rem; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+          <span>📝 Personal Information</span>
+        </h3>
+        <form id="profileForm" onsubmit="return saveProfile(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="name">Full Name <span class="required">*</span></label>
+              <input type="text" id="name" class="form-control" required placeholder="e.g. Ramesh Patil">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="email">Email Address</label>
+              <input type="email" id="email" class="form-control" disabled style="background:var(--bg); cursor:not-allowed;">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="phone">Phone Number <span class="required">*</span></label>
+              <input type="tel" id="phone" class="form-control" required placeholder="+91 98765 43210">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="location">Location / District</label>
+              <input type="text" id="location" class="form-control" placeholder="e.g. Nashik, Maharashtra">
+            </div>
+          </div>
+
+          <div style="margin-top:1.25rem;">
+            <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- SMS & WhatsApp Price Alert Preferences Card -->
+      <div class="card animate-fade" style="margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
+          <h3 style="font-size:1.05rem; display:flex; align-items:center; gap:0.5rem; margin:0;">
+            <span>🔔 SMS & WhatsApp Mandi Alerts</span>
+          </h3>
+          <span class="badge badge-success">Automated SIH Service</span>
+        </div>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+          Receive automated daily APMC modal prices and AI price spike notifications directly on your phone.
+        </p>
+
+        <!-- Notification Channels -->
+        <div style="background:var(--bg); padding:0.85rem; border-radius:8px; margin-bottom:1rem;">
+          <label class="pref-toggle">
+            <input type="checkbox" id="alertWhatsApp" checked onchange="saveAlertPreferences()">
+            <span>📲 <strong>WhatsApp Daily Alert</strong> (Direct message with prices & buyer demand)</span>
+          </label>
+          <label class="pref-toggle">
+            <input type="checkbox" id="alertSMS" checked onchange="saveAlertPreferences()">
+            <span>💬 <strong>SMS Quick Alert</strong> (Works on 2G feature phones without internet)</span>
+          </label>
+        </div>
+
+        <!-- Frequency -->
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label class="form-label" for="alertFrequency">Alert Schedule & Frequency</label>
+          <select id="alertFrequency" class="form-control" onchange="saveAlertPreferences()">
+            <option value="daily_morning">🌅 Daily Morning (7:00 AM) — Before Mandi Opening</option>
+            <option value="twice_daily">⏰ Twice Daily (7:00 AM & 4:00 PM Closing Rates)</option>
+            <option value="price_spike">⚡ Urgent Alerts Only (Price fluctuates > 5%)</option>
+          </select>
+        </div>
+
+        <!-- Subscribed Crops -->
+        <div class="form-group" style="margin-bottom:1.25rem;">
+          <label class="form-label">Subscribed Crops for Alerts:</label>
+          <div class="crop-chips-grid" id="cropAlertChips">
+            <label class="crop-chip-label selected"><input type="checkbox" value="Onion" checked onchange="toggleCropChip(this)">🧅 Onion (कांदा)</label>
+            <label class="crop-chip-label selected"><input type="checkbox" value="Tomato" checked onchange="toggleCropChip(this)">🍅 Tomato (टोमॅटो)</label>
+            <label class="crop-chip-label selected"><input type="checkbox" value="Wheat" checked onchange="toggleCropChip(this)">🌾 Wheat (गहू)</label>
+            <label class="crop-chip-label"><input type="checkbox" value="Potato" onchange="toggleCropChip(this)">🥔 Potato (बटाटा)</label>
+            <label class="crop-chip-label"><input type="checkbox" value="Soybean" onchange="toggleCropChip(this)">🫘 Soybean (सोयाबीन)</label>
+            <label class="crop-chip-label"><input type="checkbox" value="Cotton" onchange="toggleCropChip(this)">☁️ Cotton (कापूस)</label>
+            <label class="crop-chip-label"><input type="checkbox" value="Grapes" onchange="toggleCropChip(this)">🍇 Grapes (द्राक्षे)</label>
+          </div>
+        </div>
+
+        <!-- Sample Preview & Test Button -->
+        <div class="alert-sample-box">
+          <strong>📲 Preview Sample WhatsApp Alert:</strong><br>
+          <em>"🌾 [KisanSetu Alert] Today's Nashik Mandi: Onion ₹28/kg (↑ ₹2), Tomato ₹22/kg. AI Advice: Demand rising, favorable selling window!"</em>
+        </div>
+
+        <div style="display:flex; gap:0.75rem; margin-top:1rem; flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="sendTestWhatsAppAlert()">
+            📲 Test WhatsApp Message
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="saveAlertPreferences(true)">
+            ✅ Save Preferences
+          </button>
+        </div>
+      </div>
+
+      <!-- System & Demo Reset Card -->
+      <div class="card animate-fade" style="border-color:rgba(239, 68, 68, 0.3);">
+        <h3 style="font-size:1.05rem; color:var(--danger); margin-bottom:0.5rem;">⚙️ Data & Cache</h3>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+          Clear offline indexed cache or reset mock transactions.
+        </p>
+        <button type="button" class="btn btn-outline btn-sm" onclick="resetDemo()" style="color:var(--danger); border-color:var(--danger);">
+          🗑️ Clear Cached Data
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+  <nav class="bottom-nav" id="bottomNav"></nav>
+
+  <!-- Firebase Compat CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics-compat.js"></script>
+  <script src="../../js/firebase-config.js"></script>
+  <script src="../../js/firebase-backend.js"></script>
+
+  <!-- App Scripts -->
+  <script src="../../js/data.js"></script>
+  <script src="../../js/translations.js"></script>
+  <script src="../../js/app.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>

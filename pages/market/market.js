@@ -177,3 +177,87 @@ function renderTable(prices) {
     </table>
   `;
 }
+
+// ═════════════════════════════════════════════════════════
+// VOICE SEARCH INTEGRATION FOR MARKET PAGE
+// ═════════════════════════════════════════════════════════
+let _marketSpeechRec = null;
+let _isMarketListening = false;
+
+function toggleMarketVoice() {
+  const micBtn = document.getElementById('marketMicBtn');
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (!SpeechRec) {
+    App.showNotification('Speech Not Supported', 'Web Speech API is not supported in this browser.', 'warning');
+    return;
+  }
+
+  if (_isMarketListening) {
+    if (_marketSpeechRec) _marketSpeechRec.stop();
+    _isMarketListening = false;
+    if (micBtn) micBtn.classList.remove('listening');
+    return;
+  }
+
+  try {
+    _marketSpeechRec = new SpeechRec();
+    _marketSpeechRec.continuous = false;
+    _marketSpeechRec.interimResults = false;
+
+    const lang = App.getLang ? App.getLang() : 'en';
+    _marketSpeechRec.lang = lang === 'mr' ? 'mr-IN' : (lang === 'hi' ? 'hi-IN' : 'en-IN');
+
+    _marketSpeechRec.onstart = () => {
+      _isMarketListening = true;
+      if (micBtn) micBtn.classList.add('listening');
+      App.showNotification('Listening... 🎙️', 'Speak crop or market name (उदा. कांदा, Nashik, Tomato)', 'info');
+    };
+
+    _marketSpeechRec.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.trim();
+      const searchInput = document.getElementById('searchCrop');
+      if (searchInput) {
+        searchInput.value = transcript;
+        filterMarket();
+        App.showNotification('Search Applied 🔍', `Showing results for: "${transcript}"`, 'success');
+      }
+    };
+
+    _marketSpeechRec.onerror = () => {
+      _isMarketListening = false;
+      if (micBtn) micBtn.classList.remove('listening');
+    };
+
+    _marketSpeechRec.onend = () => {
+      _isMarketListening = false;
+      if (micBtn) micBtn.classList.remove('listening');
+    };
+
+    _marketSpeechRec.start();
+  } catch (err) {
+    console.error('Market voice error:', err);
+    _isMarketListening = false;
+    if (micBtn) micBtn.classList.remove('listening');
+  }
+}
+
+// ═════════════════════════════════════════════════════════
+// LIVE MANDI API SYNC
+// ═════════════════════════════════════════════════════════
+async function syncLiveMandiRates() {
+  const badge = document.getElementById('mandiStatusBadge');
+  if (window.MandiAPI && typeof MandiAPI.fetchPrices === 'function') {
+    try {
+      const liveData = await MandiAPI.fetchPrices();
+      if (liveData && liveData.length) {
+        // Merge or prepend live data
+        if (badge) badge.textContent = '🟢 data.gov.in Live (' + liveData.length + ' Mandis)';
+      }
+    } catch (e) {
+      if (badge) badge.textContent = '🟡 Offline Cached Rates';
+    }
+  }
+}
+setTimeout(syncLiveMandiRates, 1000);
+

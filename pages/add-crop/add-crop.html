@@ -27,22 +27,27 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="cropName"><span data-i18n="addCrop.cropName">Crop Name</span> <span class="required">*</span></label>
-              <select id="cropName" class="form-control" required onchange="updateVarieties()">
-                <option value="" data-i18n="addCrop.selectCrop">Select crop</option>
-                <option value="Onion">Onion (कांदा / प्याज)</option>
-                <option value="Tomato">Tomato (टोमॅटो / टमाटर)</option>
-                <option value="Wheat">Wheat (गहू / गेहूं)</option>
-                <option value="Potato">Potato (बटाटा / आलू)</option>
-                <option value="Soybean">Soybean (सोयाबीन)</option>
-                <option value="Rice">Rice (तांदूळ / चावल)</option>
-                <option value="Sugarcane">Sugarcane (ऊस / गन्ना)</option>
-                <option value="Grapes">Grapes (द्राक्षे / अंगूर)</option>
-                <option value="Pomegranate">Pomegranate (डाळिंब / अनार)</option>
-                <option value="Cotton">Cotton (कापूस / कपास)</option>
-                <option value="Maize">Maize (मका / मक्का)</option>
-                <option value="Chickpea">Chickpea (हरभरा / चना)</option>
-                <option value="Other">Other / इतर (Custom)</option>
-              </select>
+              <div class="voice-input-wrapper">
+                <select id="cropName" class="form-control" required onchange="updateVarieties()">
+                  <option value="" data-i18n="addCrop.selectCrop">Select crop</option>
+                  <option value="Onion">Onion (कांदा / प्याज)</option>
+                  <option value="Tomato">Tomato (टोमॅटो / टमाटर)</option>
+                  <option value="Wheat">Wheat (गहू / गेहूं)</option>
+                  <option value="Potato">Potato (बटाटा / आलू)</option>
+                  <option value="Soybean">Soybean (सोयाबीन)</option>
+                  <option value="Rice">Rice (तांदूळ / चावल)</option>
+                  <option value="Sugarcane">Sugarcane (ऊस / गन्ना)</option>
+                  <option value="Grapes">Grapes (द्राक्षे / अंगूर)</option>
+                  <option value="Pomegranate">Pomegranate (डाळिंब / अनार)</option>
+                  <option value="Cotton">Cotton (कापूस / कपास)</option>
+                  <option value="Maize">Maize (मका / मक्का)</option>
+                  <option value="Chickpea">Chickpea (हरभरा / चना)</option>
+                  <option value="Other">Other / इतर (Custom)</option>
+                </select>
+                <button type="button" class="btn-mic" id="cropMicBtn" onclick="toggleVoiceInput()" title="Speak crop name (बोलून पीक निवडा)">
+                  🎤
+                </button>
+              </div>
               <input type="text" id="customCropName" class="form-control" placeholder="Enter crop name" style="display:none; margin-top:0.5rem;">
             </div>
             <div class="form-group">
@@ -103,6 +108,9 @@
             <textarea id="notes" class="form-control" placeholder="Any additional details about your crop..." rows="3"></textarea>
           </div>
 
+          <!-- AI Pre-Listing Intelligence & Blockchain Genesis Preview -->
+          <div id="aiPreListingContainer"></div>
+
           <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
             <button type="submit" class="btn btn-primary btn-lg" data-i18n="addCrop.submit">🌾 List Crop</button>
             <button type="reset" class="btn btn-outline btn-lg" data-i18n="addCrop.clear">Clear Form</button>
@@ -127,6 +135,8 @@
   <!-- App Scripts -->
   <script src="../../js/data.js"></script>
   <script src="../../js/translations.js"></script>
+  <script src="../../js/ai-engine.js"></script>
+  <script src="../../js/blockchain.js"></script>
   <script src="../../js/app.js"></script>
   <script src="add-crop.js"></script>
 </body>

@@ -118,3 +118,235 @@
   border-color: var(--primary);
   color: var(--primary);
 }
+
+/* ═════════════════════════════════════════════════════════
+   ESCROW PAYMENT TIMELINE & LOGISTICS TRACKING
+   ═════════════════════════════════════════════════════════ */
+.escrow-container {
+  margin-top: 1.25rem;
+  background: linear-gradient(135deg, rgba(45, 106, 79, 0.05), rgba(82, 183, 136, 0.08));
+  border: 1px solid rgba(45, 106, 79, 0.25);
+  border-radius: 12px;
+  padding: 1.2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.escrow-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px dashed rgba(45, 106, 79, 0.25);
+}
+
+.escrow-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #1B4332;
+  color: #D8F3DC;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.escrow-id {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--card);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* Stepper */
+.escrow-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  position: relative;
+}
+
+@media (max-width: 640px) {
+  .escrow-steps {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}
+
+.escrow-step {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  position: relative;
+  transition: all 0.25s ease;
+}
+
+.escrow-step.completed {
+  border-color: #2D6A4F;
+  background: rgba(45, 106, 79, 0.08);
+}
+
+.escrow-step.active {
+  border-color: #ff9800;
+  background: rgba(255, 152, 0, 0.06);
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.2);
+}
+
+.escrow-step-icon {
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
+}
+
+.escrow-step-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+}
+
+.escrow-step-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.25;
+}
+
+.escrow-step-status {
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.escrow-step.completed .escrow-step-status {
+  color: #2D6A4F;
+}
+.escrow-step.active .escrow-step-status {
+  color: #d97706;
+}
+.escrow-step.pending .escrow-step-status {
+  color: var(--text-muted);
+}
+
+/* Escrow Actions */
+.escrow-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+/* ── Logistics Tracking Simulator ─────────── */
+.logistics-card {
+  margin-top: 1rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.logistics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.logistics-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.live-pulse {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: live-pulse-anim 1.5s infinite;
+}
+
+@keyframes live-pulse-anim {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.route-progress-wrap {
+  margin: 1rem 0;
+  position: relative;
+}
+
+.route-bar-bg {
+  height: 6px;
+  background: #E5E7EB;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.route-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2D6A4F, #52B788);
+  border-radius: 4px;
+  transition: width 0.8s ease;
+}
+
+.route-points {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.route-point {
+  display: flex;
+  flex-direction: column;
+}
+.route-point.end { text-align: right; }
+.route-point-name { font-weight: 700; color: var(--text); }
+.route-point-meta { font-size: 0.7rem; color: var(--text-muted); }
+
+.logistics-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border);
+}
+
+.logistics-meta-item {
+  background: var(--bg);
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+.logistics-meta-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.logistics-meta-val {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 0.15rem;
+}
+

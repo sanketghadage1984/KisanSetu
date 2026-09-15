@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market Prices & Mandi Rates — KisanSetu</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="market.css">
+</head>
+<body>
+  <nav class="top-nav" id="topNav"></nav>
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="dashboard-layout">
+    <div class="page-content">
+      <div class="dashboard-header">
+        <div>
+          <h1 class="dashboard-title" data-i18n="market.title">📈 Live Mandi Market Rates</h1>
+          <p class="dashboard-subtitle" data-i18n="market.subtitle">Real-time APMC prices, trends & AI forecasts across Indian mandis</p>
+        </div>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <span class="badge badge-success" id="mandiStatusBadge">🟢 data.gov.in Live</span>
+          <a href="../add-crop/add-crop.html" class="btn btn-primary btn-sm" data-i18n="dash.addCrop">➕ Add Crop</a>
+        </div>
+      </div>
+
+      <!-- Filters & Voice Search Bar -->
+      <div class="card" style="margin-bottom:1.5rem; padding:1rem 1.25rem;">
+        <div class="market-toolbar" style="display:flex; flex-wrap:wrap; gap:1rem; align-items:center; justify-content:space-between;">
+          
+          <!-- Search input + Voice button -->
+          <div style="display:flex; align-items:center; gap:0.5rem; flex:1; min-width:260px;">
+            <div style="position:relative; flex:1;">
+              <input type="text" id="searchCrop" class="form-control" placeholder="Search crop, variety, or mandi (उदा. Onion, Nashik)..." oninput="filterMarket()" style="padding-right:2.8rem;">
+              <button type="button" id="marketMicBtn" class="btn-mic" onclick="toggleMarketVoice()" title="Voice search (बोलून शोधा)" style="position:absolute; right:6px; top:50%; transform:translateY(-50%); padding:0.35rem 0.6rem; font-size:0.95rem; border:none; background:transparent;">
+                🎤
+              </button>
+            </div>
+          </div>
+
+          <!-- Sort selection -->
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <label for="sortBy" style="font-size:0.85rem; font-weight:600; color:var(--text-muted); white-space:nowrap;">Sort by:</label>
+            <select id="sortBy" class="form-control" onchange="filterMarket()" style="width:auto; min-width:140px;">
+              <option value="name">Crop Name (A-Z)</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="distance">Distance: Nearest</option>
+            </select>
+          </div>
+
+          <!-- View toggle -->
+          <div class="tabs" id="viewToggle" style="margin:0;">
+            <button class="tab active" onclick="setView('cards', this)">🗂️ Cards</button>
+            <button class="tab" onclick="setView('table', this)">📊 Table</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Market Cards Container -->
+      <div id="marketCards" class="market-grid"></div>
+
+      <!-- Market Table Container -->
+      <div id="marketTable" class="card" style="display:none; overflow-x:auto; padding:0;"></div>
+
+    </div>
+  </main>
+
+  <nav class="bottom-nav" id="bottomNav"></nav>
+
+  <!-- Firebase Compat CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics-compat.js"></script>
+  <script src="../../js/firebase-config.js"></script>
+  <script src="../../js/firebase-backend.js"></script>
+
+  <!-- App & Mandi Scripts -->
+  <script src="../../js/data.js"></script>
+  <script src="../../js/translations.js"></script>
+  <script src="../../js/ai-engine.js"></script>
+  <script src="../../js/mandi-api.js"></script>
+  <script src="../../js/app.js"></script>
+  <script src="market.js"></script>
+</body>
+</html>

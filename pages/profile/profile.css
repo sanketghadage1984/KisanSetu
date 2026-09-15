@@ -9,18 +9,92 @@
 .pref-toggle {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
+  gap: 0.75rem;
+  font-size: 0.92rem;
+  color: var(--text);
   cursor: pointer;
+  padding: 0.5rem 0;
 }
 
 .pref-toggle input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--primary);
+  width: 20px;
+  height: 20px;
+  accent-color: #2D6A4F;
+  cursor: pointer;
 }
 
 @media (max-width: 600px) {
   .form-row { grid-template-columns: 1fr; }
 }
+
+/* ═════════════════════════════════════════════════════════
+   PROFILE HEADER & ALERT PREFERENCES
+   ═════════════════════════════════════════════════════════ */
+.profile-avatar-large {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1B4332, #40916C);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(27, 67, 50, 0.25);
+}
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  background: linear-gradient(135deg, rgba(45, 106, 79, 0.06), rgba(82, 183, 136, 0.1));
+  border: 1px solid rgba(45, 106, 79, 0.2);
+  border-radius: 12px;
+}
+
+.crop-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.crop-chip-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 0.82rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.crop-chip-label input {
+  display: none;
+}
+
+.crop-chip-label.selected {
+  background: #2D6A4F;
+  color: #fff;
+  border-color: #1B4332;
+  box-shadow: 0 2px 6px rgba(45, 106, 79, 0.3);
+}
+
+.alert-sample-box {
+  background: #E8F5E9;
+  border-left: 4px solid #2D6A4F;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: #1B4332;
+  margin-top: 1rem;
+  line-height: 1.4;
+}
+

@@ -8,3 +8,159 @@
 @media (max-width: 600px) {
   .form-row { grid-template-columns: 1fr; }
 }
+
+/* ═════════════════════════════════════════════════════════
+   AI PRE-LISTING ANALYSIS CARD & BLOCKCHAIN GENESIS
+   ═════════════════════════════════════════════════════════ */
+.ai-analysis-card {
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, rgba(45, 106, 79, 0.08), rgba(82, 183, 136, 0.12));
+  border: 1px solid rgba(45, 106, 79, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.ai-analysis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed rgba(45, 106, 79, 0.3);
+}
+
+.ai-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--primary-dark);
+}
+
+.ai-tag {
+  background: #1B4332;
+  color: #D8F3DC;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ai-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ai-card-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.ai-card-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.3rem;
+}
+
+.ai-card-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.ai-card-subtext {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+/* Spoilage meter */
+.risk-low { color: #10B981; }
+.risk-med { color: #F59E0B; }
+.risk-high { color: #EF4444; }
+
+/* Blockchain Hash preview */
+.blockchain-preview {
+  background: #0B1E13;
+  color: #74C69D;
+  border-radius: 8px;
+  padding: 0.85rem;
+  font-family: monospace;
+  font-size: 0.78rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.bc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #D8F3DC;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bc-hash {
+  word-break: break-all;
+  color: #52B788;
+  background: rgba(0,0,0,0.3);
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Voice Input Mic Button */
+.voice-input-wrapper {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.btn-mic {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-mic:hover {
+  background: var(--primary-50);
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+.btn-mic.listening {
+  background: #EF4444;
+  color: #fff;
+  border-color: #DC2626;
+  animation: mic-pulse 1s infinite alternate;
+}
+
+@keyframes mic-pulse {
+  from { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  to { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+

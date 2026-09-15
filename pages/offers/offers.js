@@ -171,14 +171,11 @@ function renderOffers() {
 
         ${messages ? `<div class="offer-conversation">${messages}</div>` : ''}
 
+        ${offer.status === 'accepted' ? renderEscrowAndLogistics(offer, userType) : ''}
+
         ${canAct ? `
-<<<<<<< HEAD
         <div class="counter-offer-input" style="margin-top:1rem;">
           <input type="number" id="counter_${offerId}" class="form-control" placeholder="${_t('offers.counterPlaceholder')}" step="0.5" min="1">
-=======
-        <div class="counter-offer-input">
-          <input type="number" id="counter_${offer.id}" placeholder="${_t('offers.counterPlaceholder')}" step="0.5" min="1">
->>>>>>> parent of b40a222 (Update crop icons, add dark mode, and fix animations)
         </div>
         <div class="offer-actions-row">
           <button class="btn btn-success btn-sm" onclick="acceptOffer('${offerId}')">✅ ${_t('offers.accept')}</button>
@@ -292,3 +289,220 @@ async function counterOffer(offerId) {
     App.showNotification('Error', 'Failed to send counter. Try again.', 'error');
   }
 }
+
+// ═════════════════════════════════════════════════════════
+// ESCROW PAYMENT TIMELINE & LOGISTICS TRACKING UI
+// ═════════════════════════════════════════════════════════
+
+function getEscrowStage(offerId) {
+  try {
+    const saved = localStorage.getItem('kisansetu_escrow_' + offerId);
+    return saved ? parseInt(saved, 10) : 1;
+  } catch (e) {
+    return 1;
+  }
+}
+
+async function updateEscrowStage(offerId, newStage) {
+  try {
+    localStorage.setItem('kisansetu_escrow_' + offerId, newStage);
+    const offer = _allOffers.find(o => o.id === offerId);
+    if (offer) {
+      offer.escrowStage = newStage;
+      if (window.db) {
+        db.collection('offers').doc(offerId).update({ escrowStage: newStage }).catch(() => {});
+      }
+      // Update blockchain traceability event if available
+      if (window.BlockchainTracker && offer.cropId) {
+        const eventType = newStage === 2 ? 'dispatched' : (newStage === 3 ? 'delivered' : 'offer_accepted');
+        await BlockchainTracker.updateChainEvent(offer.cropId, eventType, {
+          offerId: offer.id,
+          amount: (offer.offerPrice || 0) * (offer.quantity || 0),
+          stage: newStage,
+          timestamp: Date.now()
+        });
+      }
+    }
+
+    if (newStage === 2) {
+      App.showNotification('Produce Dispatched! 🚚', 'Logistics GPS tracking has been activated.', 'info');
+    } else if (newStage === 3) {
+      App.showNotification('Escrow Released! 💸', 'Delivery verified. Funds transferred to farmer account.', 'success');
+    } else {
+      App.showNotification('Escrow Reset', 'Reset to Stage 1 for testing.', 'info');
+    }
+
+    renderOffers();
+  } catch (err) {
+    console.error('updateEscrowStage error:', err);
+  }
+}
+
+function renderEscrowAndLogistics(offer, userType) {
+  const stage = getEscrowStage(offer.id);
+  const totalAmount = (offer.offerPrice || 0) * (offer.quantity || 0);
+  const escrowId = `KS-ESC-${(offer.id || '99').slice(0, 8).toUpperCase()}`;
+
+  // Calculate logistics using AIEngine
+  let logisticsData = {
+    vehicle: 'Mini Truck (Tata Ace)',
+    distanceKm: 45,
+    estimatedCost: 850,
+    costPerKg: 0.85,
+    fuelCost: 450,
+    labourCost: 300
+  };
+
+  if (window.AIEngine && typeof AIEngine.estimateTransportCost === 'function') {
+    try {
+      const calc = AIEngine.estimateTransportCost({
+        distanceKm: 48,
+        quantityKg: offer.quantity || 1000,
+        cropType: offer.cropName || 'onion'
+      });
+      if (calc) {
+        logisticsData = {
+          vehicle: calc.vehicle || logisticsData.vehicle,
+          distanceKm: calc.distanceKm || 48,
+          estimatedCost: calc.totalEstimatedCost || 950,
+          costPerKg: calc.costPerKg || 0.95,
+          fuelCost: calc.breakdown?.fuel || 480,
+          labourCost: calc.breakdown?.labour || 300
+        };
+      }
+    } catch (e) {
+      console.warn('AIEngine estimateTransportCost fallback', e);
+    }
+  }
+
+  // Stepper classes
+  const step1Class = 'completed';
+  const step2Class = stage >= 2 ? (stage > 2 ? 'completed' : 'active') : 'pending';
+  const step3Class = stage === 3 ? 'completed' : 'pending';
+
+  // Route progress percentage
+  const progressPct = stage === 1 ? 25 : (stage === 2 ? 65 : 100);
+  const statusLabel = stage === 1 ? 'Awaiting Dispatch' : (stage === 2 ? 'In Transit (On Highway)' : 'Delivered & Verified');
+  const etaLabel = stage === 1 ? 'Scheduled: Today' : (stage === 2 ? 'ETA: 2 hrs 15 mins' : 'Completed');
+
+  return `
+    <div class="escrow-container">
+      <div class="escrow-header">
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <span class="escrow-badge">🛡️ Escrow Smart Contract</span>
+          <span class="escrow-id">${escrowId}</span>
+        </div>
+        <div style="font-size:0.85rem; font-weight:700; color:var(--primary);">
+          Secured Vault: ${App.formatPrice(totalAmount)}
+        </div>
+      </div>
+
+      <!-- 3-Step Escrow Timeline -->
+      <div class="escrow-steps">
+        <div class="escrow-step ${step1Class}">
+          <div class="escrow-step-icon">🔒</div>
+          <div class="escrow-step-title">1. Funds Locked</div>
+          <div class="escrow-step-desc">Buyer deposited ${App.formatPrice(totalAmount)} into RBI-compliant escrow vault</div>
+          <div class="escrow-step-status">✅ Escrow Funded</div>
+        </div>
+
+        <div class="escrow-step ${step2Class}">
+          <div class="escrow-step-icon">🚚</div>
+          <div class="escrow-step-title">2. In-Transit</div>
+          <div class="escrow-step-desc">Produce dispatched with GPS route tracking and condition monitoring</div>
+          <div class="escrow-step-status">
+            ${stage >= 2 ? (stage > 2 ? '✅ Transit Complete' : '⏳ In Progress') : '⏸ Pending Dispatch'}
+          </div>
+        </div>
+
+        <div class="escrow-step ${step3Class}">
+          <div class="escrow-step-icon">💸</div>
+          <div class="escrow-step-title">3. Payout Released</div>
+          <div class="escrow-step-desc">Quality verified via QR code inspection; payment auto-released to farmer</div>
+          <div class="escrow-step-status">
+            ${stage === 3 ? '✅ Payout Released' : '⏸ Locked Until Inspection'}
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons for advancing escrow simulation -->
+      <div class="escrow-actions">
+        ${stage === 1 ? `
+          <button class="btn btn-primary btn-sm" onclick="updateEscrowStage('${offer.id}', 2)">
+            🚚 Dispatch Produce (Start Tracking)
+          </button>
+        ` : ''}
+
+        ${stage === 2 ? `
+          <button class="btn btn-success btn-sm" onclick="updateEscrowStage('${offer.id}', 3)">
+            ✅ Verify Delivery & Release Payment (${App.formatPrice(totalAmount)})
+          </button>
+        ` : ''}
+
+        ${stage === 3 ? `
+          <span style="font-size:0.85rem; color:#2D6A4F; font-weight:700; display:inline-flex; align-items:center; gap:0.3rem;">
+            🎉 Settlement Complete · Transaction Hash Verified
+          </span>
+          <button class="btn btn-outline btn-sm" onclick="updateEscrowStage('${offer.id}', 1)" style="margin-left:auto;">
+            🔄 Reset Demo Flow
+          </button>
+        ` : ''}
+      </div>
+
+      <!-- Logistics GPS Tracking Simulator -->
+      <div class="logistics-card">
+        <div class="logistics-header">
+          <div class="logistics-title">
+            <span class="live-pulse"></span>
+            <span>Live Logistics GPS Simulator</span>
+          </div>
+          <span class="badge ${stage === 2 ? 'badge-warning' : (stage === 3 ? 'badge-success' : 'badge-info')}">
+            ${statusLabel}
+          </span>
+        </div>
+
+        <!-- Route visualizer -->
+        <div class="route-progress-wrap">
+          <div class="route-bar-bg">
+            <div class="route-bar-fill" style="width: ${progressPct}%;"></div>
+          </div>
+          <div class="route-points">
+            <div class="route-point">
+              <span class="route-point-name">📍 Farm (Origin)</span>
+              <span class="route-point-meta">${offer.location || 'Nashik District'}</span>
+            </div>
+            <div class="route-point" style="text-align:center;">
+              <span class="route-point-name">🚚 ${stage === 2 ? 'En Route (NH 3)' : 'Checkpoint'}</span>
+              <span class="route-point-meta">${etaLabel}</span>
+            </div>
+            <div class="route-point end">
+              <span class="route-point-name">🏁 APMC Hub / Mandi</span>
+              <span class="route-point-meta">${offer.traderLocation || 'Vashi Mandi Hub'}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Logistics Details -->
+        <div class="logistics-meta-grid">
+          <div class="logistics-meta-item">
+            <div class="logistics-meta-label">Transport Vehicle</div>
+            <div class="logistics-meta-val">${logisticsData.vehicle}</div>
+          </div>
+          <div class="logistics-meta-item">
+            <div class="logistics-meta-label">Distance & ETA</div>
+            <div class="logistics-meta-val">${logisticsData.distanceKm} km · ${etaLabel}</div>
+          </div>
+          <div class="logistics-meta-item">
+            <div class="logistics-meta-label">AI Transport Cost</div>
+            <div class="logistics-meta-val">₹${logisticsData.estimatedCost.toLocaleString()} (₹${logisticsData.costPerKg}/kg)</div>
+          </div>
+          <div class="logistics-meta-item">
+            <div class="logistics-meta-label">Driver Contact</div>
+            <div class="logistics-meta-val">Ramesh S. (+91 98231 44120)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
