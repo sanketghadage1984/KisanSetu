@@ -11,11 +11,76 @@ const App = {
     this.initLangSelector();
     this.translatePage();
     this.checkAuth();
+    this.registerServiceWorker();
+    this.initPWAInstall();
+    this.initConnectivityDetection();
+  },
+
+  // ── Service Worker Registration ──────────────────
+  registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        const swPath = this.getBasePath() + 'sw.js';
+        navigator.serviceWorker.register(swPath).then(reg => {
+          console.log('[KisanSetu] SW registered:', reg.scope);
+        }).catch(err => {
+          console.warn('[KisanSetu] SW registration failed:', err);
+        });
+      });
+    }
+  },
+
+  // ── PWA Install Prompt ─────────────────────────
+  _deferredPrompt: null,
+  initPWAInstall() {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this._deferredPrompt = e;
+      this._showInstallBanner();
+    });
+  },
+
+  _showInstallBanner() {
+    if (document.getElementById('pwaInstallBanner')) return;
+    const banner = document.createElement('div');
+    banner.id = 'pwaInstallBanner';
+    banner.className = 'pwa-install-banner';
+    banner.innerHTML = `
+      <div class="pwa-install-content">
+        <span>📱 Install KisanSetu for offline access</span>
+        <div class="pwa-install-actions">
+          <button class="btn btn-primary btn-sm" id="pwaInstallBtn">Install App</button>
+          <button class="btn btn-sm" onclick="this.parentElement.parentElement.parentElement.remove()" style="background:transparent;color:var(--text-muted);">Later</button>
+        </div>
+      </div>
+    `;
+    document.body.prepend(banner);
+    document.getElementById('pwaInstallBtn').addEventListener('click', async () => {
+      if (this._deferredPrompt) {
+        this._deferredPrompt.prompt();
+        const { outcome } = await this._deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          this.showNotification('App Installed! 🎉', 'KisanSetu has been added to your home screen', 'success');
+        }
+        this._deferredPrompt = null;
+        banner.remove();
+      }
+    });
+  },
+
+  // ── Connectivity Detection ────────────────────
+  initConnectivityDetection() {
+    window.addEventListener('offline', () => {
+      this.showNotification('You\'re Offline 📴', 'Some features may be limited. Data will sync when back online.', 'warning');
+    });
+    window.addEventListener('online', () => {
+      this.showNotification('Back Online! 🌐', 'Syncing your data...', 'success');
+    });
   },
 
   // ── LocalStorage Helpers ──────────────────────────
   initLocalStorage() {
-    if (!localStorage.getItem('kisansetu_initialized')) {
+    if (!localStorage.getItem('kisansetu_initialized') || !localStorage.getItem('kisansetu_crops')) {
       localStorage.setItem('kisansetu_farmer', JSON.stringify(KisanSetuData.defaultFarmer));
       localStorage.setItem('kisansetu_trader', JSON.stringify(KisanSetuData.defaultTrader));
       localStorage.setItem('kisansetu_crops', JSON.stringify(KisanSetuData.farmerCrops));
@@ -147,6 +212,16 @@ const App = {
     if (!email || !password) return false;
     localStorage.setItem('kisansetu_loggedIn', 'true');
     localStorage.setItem('kisansetu_userType', userType || 'farmer');
+    // Ensure demo records are available
+    if (!localStorage.getItem('kisansetu_crops') || JSON.parse(localStorage.getItem('kisansetu_crops') || '[]').length === 0) {
+      localStorage.setItem('kisansetu_crops', JSON.stringify(KisanSetuData.farmerCrops));
+    }
+    if (!localStorage.getItem('kisansetu_offers') || JSON.parse(localStorage.getItem('kisansetu_offers') || '[]').length === 0) {
+      localStorage.setItem('kisansetu_offers', JSON.stringify(KisanSetuData.offers));
+    }
+    if (!localStorage.getItem('kisansetu_transactions') || JSON.parse(localStorage.getItem('kisansetu_transactions') || '[]').length === 0) {
+      localStorage.setItem('kisansetu_transactions', JSON.stringify(KisanSetuData.transactions));
+    }
     return true;
   },
 
@@ -171,15 +246,30 @@ const App = {
   },
 
   logout() {
-    // Firebase sign-out — then redirect
-    if (typeof auth !== 'undefined') {
+    // Use BackendService.logoutUser if available (clears Firebase + all localStorage)
+    if (typeof BackendService !== 'undefined' && typeof BackendService.logoutUser === 'function') {
+      BackendService.logoutUser().then(() => {
+        this.navigateTo('login');
+      }).catch(() => {
+        localStorage.setItem('kisansetu_loggedIn', 'false');
+        localStorage.removeItem('kisansetu_userType');
+        localStorage.removeItem('kisansetu_farmer');
+        localStorage.removeItem('kisansetu_trader');
+        this.navigateTo('login');
+      });
+    } else if (typeof auth !== 'undefined') {
       auth.signOut().then(() => {
         localStorage.setItem('kisansetu_loggedIn', 'false');
         localStorage.removeItem('kisansetu_userType');
+        localStorage.removeItem('kisansetu_farmer');
+        localStorage.removeItem('kisansetu_trader');
         this.navigateTo('login');
       });
     } else {
       localStorage.setItem('kisansetu_loggedIn', 'false');
+      localStorage.removeItem('kisansetu_userType');
+      localStorage.removeItem('kisansetu_farmer');
+      localStorage.removeItem('kisansetu_trader');
       this.navigateTo('login');
     }
   },
@@ -203,7 +293,8 @@ const App = {
       'traders': base + 'pages/traders/traders.html',
       'offers': base + 'pages/offers/offers.html',
       'trader-dashboard': base + 'pages/trader-dashboard/trader-dashboard.html',
-      'profile': base + 'pages/profile/profile.html'
+      'profile': base + 'pages/profile/profile.html',
+      'community': base + 'pages/community/community.html'
     };
     return routes[page] || routes['home'];
   },
@@ -223,6 +314,7 @@ const App = {
     if (path.includes('/offers/')) return 'offers';
     if (path.includes('/trader-dashboard/')) return 'trader-dashboard';
     if (path.includes('/profile/')) return 'profile';
+    if (path.includes('/community/')) return 'community';
     return 'home';
   },
 
@@ -376,14 +468,32 @@ const App = {
 
     const traders = KisanSetuData.traders;
     const results = [];
+    const cropLower = (crop.name || '').toLowerCase();
 
     traders.forEach(trader => {
-      const offer = trader.offers[cropId];
+      let offer = trader.offers ? trader.offers[cropId] : null;
+      if (!offer && crop.name && trader.offers) {
+        const matchingKey = Object.keys(trader.offers).find(k => {
+          const sample = KisanSetuData.farmerCrops.find(fc => fc.id === k);
+          return sample && sample.name.toLowerCase() === cropLower;
+        });
+        if (matchingKey) {
+          offer = trader.offers[matchingKey];
+        } else {
+          const market = KisanSetuData.marketPrices.find(m => m.crop.toLowerCase() === cropLower);
+          const basePrice = market ? market.modalPrice : (crop.expectedPrice || 30);
+          offer = {
+            pricePerKg: Math.round(basePrice * (0.95 + (trader.rating - 4) * 0.05)),
+            quantityNeeded: crop.quantity || 1000,
+            transportCost: Math.round(trader.distance * 40 + 500)
+          };
+        }
+      }
       if (!offer) return;
 
       const grossReturn = offer.pricePerKg * Math.min(offer.quantityNeeded, crop.quantity);
       const netReturn = grossReturn - offer.transportCost;
-      const quantityMatch = Math.min(offer.quantityNeeded, crop.quantity) / crop.quantity;
+      const quantityMatch = Math.min(offer.quantityNeeded, crop.quantity) / (crop.quantity || 1);
 
       const maxDistance = 50;
       const distanceScore = Math.max(0, (maxDistance - trader.distance) / maxDistance);
@@ -425,7 +535,17 @@ const App = {
 function renderDashboardSidebar(currentPage, userType) {
   const base = App.getBasePath();
   const isFarmer = userType !== 'trader';
-  const unreadCount = App.getNotifications().filter(n => !n.read).length;
+  const isRealUser = Boolean(typeof firebase !== 'undefined' && firebase && firebase.auth && typeof firebase.auth === 'function' && firebase.auth().currentUser);
+  
+  // Real authenticated users: only show count from kisansetu_real_offers (set by Firestore listener)
+  // Default to 0 until the Firestore listener fires and populates real data
+  let pendingOffersCount = 0;
+  if (isRealUser) {
+    try {
+      const userOffers = JSON.parse(localStorage.getItem('kisansetu_real_offers') || '[]');
+      pendingOffersCount = userOffers.filter(o => o.status === 'pending' || (!isFarmer && o.status === 'countered')).length;
+    } catch(e) { pendingOffersCount = 0; }
+  }
   const _t = window.t || ((k) => k);
 
   const farmerLinks = `
@@ -448,7 +568,7 @@ function renderDashboardSidebar(currentPage, userType) {
       </a>
       <a href="${base}pages/offers/offers.html" class="sidebar-link ${currentPage === 'offers' ? 'active' : ''}" data-page="offers">
         <span class="icon">💰</span> <span data-i18n="side.offers">${_t('side.offers')}</span>
-        ${unreadCount > 0 ? `<span class="link-badge notif-badge">${unreadCount}</span>` : ''}
+        ${pendingOffersCount > 0 ? `<span class="link-badge notif-badge">${pendingOffersCount}</span>` : ''}
       </a>
     </div>
     <div class="sidebar-section">
@@ -458,6 +578,12 @@ function renderDashboardSidebar(currentPage, userType) {
       </a>
       <a href="#" class="sidebar-link" data-action="logout">
         <span class="icon">🚪</span> <span data-i18n="side.logout">${_t('side.logout')}</span>
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Community</div>
+      <a href="${base}pages/community/community.html" class="sidebar-link ${currentPage === 'community' ? 'active' : ''}" data-page="community">
+        <span class="icon">👥</span> <span>Community</span>
       </a>
     </div>
   `;
@@ -476,7 +602,7 @@ function renderDashboardSidebar(currentPage, userType) {
       <div class="sidebar-title" data-i18n="side.trade">${_t('side.trade')}</div>
       <a href="${base}pages/offers/offers.html" class="sidebar-link ${currentPage === 'offers' ? 'active' : ''}" data-page="offers">
         <span class="icon">💰</span> <span data-i18n="side.offers">${_t('side.offers')}</span>
-        ${unreadCount > 0 ? `<span class="link-badge notif-badge">${unreadCount}</span>` : ''}
+        ${pendingOffersCount > 0 ? `<span class="link-badge notif-badge">${pendingOffersCount}</span>` : ''}
       </a>
     </div>
     <div class="sidebar-section">
@@ -486,6 +612,12 @@ function renderDashboardSidebar(currentPage, userType) {
       </a>
       <a href="#" class="sidebar-link" data-action="logout">
         <span class="icon">🚪</span> <span data-i18n="side.logout">${_t('side.logout')}</span>
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Community</div>
+      <a href="${base}pages/community/community.html" class="sidebar-link ${currentPage === 'community' ? 'active' : ''}" data-page="community">
+        <span class="icon">👥</span> <span>Community</span>
       </a>
     </div>
   `;

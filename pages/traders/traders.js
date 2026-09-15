@@ -9,14 +9,22 @@ function getCropEmoji(name) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  initTradersPage();
+  // Guard: must be logged in to view traders
+  if (typeof auth !== 'undefined') {
+    auth.onAuthStateChanged(user => {
+      if (!user) { App.navigateTo('login'); return; }
+      initTradersPage(user);
+    });
+  } else {
+    initTradersPage();
+  }
 
   window.addEventListener('languageChanged', () => {
     initTradersPage();
   });
 });
 
-function initTradersPage() {
+function initTradersPage(user) {
   const userType = App.getUserType();
   document.getElementById('topNav').innerHTML = `
     <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
@@ -29,6 +37,30 @@ function initTradersPage() {
 
   populateCropSelector();
   renderTraders();
+
+  // Auto-open trader details if ?trader=ID is in the URL (from dashboard link)
+  const urlParams = new URLSearchParams(window.location.search);
+  const traderId = urlParams.get('trader');
+  if (traderId) {
+    // Small delay so the page renders first, then open the modal
+    setTimeout(() => viewTraderDetails(traderId), 300);
+  }
+
+  const currentUser = user || (typeof auth !== 'undefined' ? auth.currentUser : null);
+  if (currentUser && typeof BackendService !== 'undefined') {
+    BackendService.getCrops({ farmerId: currentUser.uid }).then(realCrops => {
+      if (realCrops && realCrops.length) {
+        const current = App.getCrops() || [];
+        const cropMap = new Map();
+        current.forEach(c => cropMap.set(c.id, c));
+        realCrops.forEach(c => cropMap.set(c.id, c));
+        const merged = Array.from(cropMap.values());
+        App.saveCrops(merged);
+        populateCropSelector();
+        renderTraders();
+      }
+    }).catch(e => console.warn('Could not fetch real crops in traders page:', e));
+  }
 }
 
 function populateCropSelector() {
@@ -239,6 +271,7 @@ function renderTraders() {
           </div>
         </div>
         <div class="card-footer">
+          <button class="btn btn-primary btn-sm" onclick="openTradeModal('${trader.id}')">🤝 ${_t('traders.makeDeal') || 'Trade Now'}</button>
           <button class="btn btn-outline btn-sm" onclick="viewTraderDetails('${trader.id}')">${_t('traders.viewDetails')}</button>
         </div>
       </div>
@@ -318,33 +351,74 @@ function closeModal() {
   document.getElementById('dealModal').classList.remove('active');
 }
 
-function submitDeal(cropId, traderId, action) {
-  const trader = KisanSetuData.traders.find(t => t.id === traderId);
+async function submitDeal(cropId, traderId, action) {
+  const trader = KisanSetuData.traders.find(t => t.id === traderId) || { name: 'Trader' };
   const crops = App.getCrops();
-  const crop = crops.find(c => c.id === cropId);
-  const offer = trader.offers[cropId];
-  const counterPrice = document.getElementById('counterPrice').value;
+  const crop = crops.find(c => c.id === cropId) || { name: 'Crop', variety: '', quantity: 1000 };
+  const offer = (trader.offers && trader.offers[cropId]) ? trader.offers[cropId] : { pricePerKg: 30, quantityNeeded: 1000, transportCost: 1500 };
+  const counterPrice = document.getElementById('counterPrice')?.value;
+  const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
 
-  const newOffer = {
-    id: App.generateId('offer'),
+  const offerId = App.generateId('offer');
+  const nowStr = new Date().toISOString().split('T')[0];
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const msgText = action === 'accept' ? `Deal accepted at ₹${offer.pricePerKg}/kg` : `Counter offer sent: ₹${counterPrice}/kg`;
+
+  const offerBase = {
+    id: offerId,
     cropId: cropId,
-    cropName: `${crop.name} (${crop.variety})`,
+    cropName: `${crop.name} (${crop.variety || ''})`,
+    farmerId: user ? user.uid : 'farmer_current',
+    farmerName: user ? (user.displayName || 'Farmer') : 'Farmer',
     traderId: traderId,
     traderName: trader.name,
+    traderPhone: '',
+    farmerPhone: '',
     offerPrice: offer.pricePerKg,
-    quantity: Math.min(offer.quantityNeeded, crop.quantity),
+    quantity: Math.min(offer.quantityNeeded || 1000, crop.quantity || 1000),
     unit: 'kg',
     status: action === 'accept' ? 'accepted' : 'countered',
-    date: new Date().toISOString().split('T')[0],
+    date: nowStr,
     farmerCounterPrice: action === 'counter' && counterPrice ? parseFloat(counterPrice) : null,
     messages: [
-      { from: 'system', text: action === 'accept' ? `Deal accepted at ₹${offer.pricePerKg}/kg` : `Counter offer: ₹${counterPrice}/kg`, time: new Date().toISOString() }
+      { from: 'farmer', text: msgText, time: timeStr }
     ]
   };
 
-  const offers = App.getOffers();
-  offers.unshift(newOffer);
+  // 1. Save to localStorage immediately (plain date, no FieldValue)
+  const localOffer = { ...offerBase, createdAt: nowStr };
+  const offers = App.getOffers() || [];
+  offers.unshift(localOffer);
   App.saveOffers(offers);
+  localStorage.setItem('kisansetu_real_offers', JSON.stringify(offers));
+
+  // 2. Save to Firestore (with server timestamp)
+  if (user && typeof db !== 'undefined') {
+    try {
+      const firestoreOffer = { ...offerBase, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+      await db.collection('offers').doc(offerId).set(firestoreOffer);
+      if (action === 'accept') {
+        const txnRef = db.collection('transactions').doc();
+        await txnRef.set({
+          offerId: offerId,
+          cropId: cropId,
+          cropName: offerBase.cropName,
+          farmerId: user.uid,
+          traderId: traderId,
+          traderName: trader.name,
+          quantity: offerBase.quantity,
+          unit: 'kg',
+          price: offer.pricePerKg,
+          totalAmount: offer.pricePerKg * offerBase.quantity,
+          netAmount: Math.max(0, (offer.pricePerKg * offerBase.quantity) - (offer.transportCost || 1200)),
+          date: firebase.firestore.FieldValue.serverTimestamp(),
+          status: 'completed'
+        });
+      }
+    } catch(err) {
+      console.warn('Firestore deal write warning:', err);
+    }
+  }
 
   closeModal();
 
@@ -354,7 +428,140 @@ function submitDeal(cropId, traderId, action) {
     App.showNotification('Counter Offer Sent', `Counter price of ₹${counterPrice}/kg sent to ${trader.name}`, 'info');
   }
 
-  setTimeout(() => App.navigateTo('offers'), 1500);
+  setTimeout(() => App.navigateTo('offers'), 1000);
+}
+
+// ── Trade modal for all-traders view (no crop pre-selected) ──
+function openTradeModal(traderId) {
+  const _t = window.t || ((k) => k);
+  const trader = KisanSetuData.traders.find(t => t.id === traderId);
+  if (!trader) return;
+
+  const crops = App.getCrops().filter(c => c.status === 'active');
+  const cropOptions = crops.length
+    ? crops.map(c => `<option value="${c.id}">${c.name} — ${c.variety || ''} (${c.quantity} kg)</option>`).join('')
+    : `<option value="" disabled>No active crops — add a crop first</option>`;
+
+  document.getElementById('dealModalContent').innerHTML = `
+    <div style="text-align:center; margin-bottom:1.25rem;">
+      <div class="trader-avatar" style="width:56px;height:56px;font-size:1.3rem;margin:0 auto 0.5rem;">${trader.avatar}</div>
+      <h3 style="margin:0;">${trader.name}</h3>
+      <div class="trader-rating" style="justify-content:center;margin:0.25rem 0;">${App.renderStars(trader.rating)} ${trader.rating}</div>
+      ${trader.verified ? `<span class="badge badge-verified">${_t('common.verified')}</span>` : ''}
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Select Your Crop <span class="required">*</span></label>
+      <select id="tradeCropSelect" class="form-control">
+        <option value="">— Choose a crop —</option>
+        ${cropOptions}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Your Offer Price (₹/kg) <span class="required">*</span></label>
+      <input type="number" id="tradeOfferPrice" class="form-control" placeholder="e.g. 28" min="1" step="0.5">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quantity (kg)</label>
+      <input type="number" id="tradeOfferQty" class="form-control" placeholder="Leave blank for full quantity" min="1">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Message (optional)</label>
+      <textarea id="tradeOfferMsg" class="form-control" rows="2" placeholder="Any message for the trader..."></textarea>
+    </div>
+
+    <div style="display:flex; gap:0.75rem; margin-top:1rem;">
+      <button class="btn btn-primary" id="tradeSubmitBtn" onclick="submitTradeOffer('${traderId}')">📤 Send Offer</button>
+      <button class="btn btn-outline" onclick="closeModal()">${_t('common.cancel') || 'Cancel'}</button>
+    </div>
+  `;
+
+  // Auto-fill price when crop is selected
+  const cropSelect = document.getElementById('tradeCropSelect');
+  cropSelect.addEventListener('change', () => {
+    const crop = crops.find(c => c.id === cropSelect.value);
+    if (crop) {
+      document.getElementById('tradeOfferPrice').value = crop.expectedPrice || '';
+      document.getElementById('tradeOfferQty').value = crop.quantity || '';
+    }
+  });
+
+  document.getElementById('dealModal').classList.add('active');
+}
+
+async function submitTradeOffer(traderId) {
+  const cropId = document.getElementById('tradeCropSelect').value;
+  const price = parseFloat(document.getElementById('tradeOfferPrice').value);
+  const qty = parseInt(document.getElementById('tradeOfferQty').value);
+  const message = document.getElementById('tradeOfferMsg')?.value?.trim() || '';
+  const btn = document.getElementById('tradeSubmitBtn');
+
+  if (!cropId) {
+    App.showNotification('Select Crop', 'Please select a crop to offer.', 'warning');
+    return;
+  }
+  if (!price || price <= 0) {
+    App.showNotification('Enter Price', 'Please enter a valid offer price.', 'warning');
+    return;
+  }
+
+  const crops = App.getCrops();
+  const crop = crops.find(c => c.id === cropId);
+  if (!crop) return;
+
+  const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+  if (!user) {
+    App.showNotification('Login Required', 'Please log in to send offers.', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+
+  try {
+    // Use BackendService.sendOffer — this creates a proper Firestore offer
+    // Note: sendOffer is designed for traders, so we create the offer doc directly
+    const trader = KisanSetuData.traders.find(t => t.id === traderId) || { name: 'Trader' };
+    const offerDoc = {
+      cropId: cropId,
+      cropName: `${crop.name} (${crop.variety || ''})`,
+      farmerId: user.uid,
+      farmerName: user.displayName || 'Farmer',
+      traderId: traderId,
+      traderName: trader.name,
+      traderPhone: '',
+      farmerPhone: '',
+      offerPrice: price,
+      quantity: qty || crop.quantity || 0,
+      unit: crop.unit || 'kg',
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      messages: [
+        {
+          from: 'farmer',
+          text: message || `Offering ₹${price}/kg for ${qty || crop.quantity} kg of ${crop.name}.`,
+          time: new Date().toLocaleString()
+        }
+      ]
+    };
+
+    const ref = await db.collection('offers').add(offerDoc);
+
+    // Also save to localStorage so the offers page shows it immediately
+    const localOffer = { ...offerDoc, id: ref.id, createdAt: new Date().toISOString() };
+    const existingOffers = App.getOffers() || [];
+    existingOffers.unshift(localOffer);
+    App.saveOffers(existingOffers);
+    localStorage.setItem('kisansetu_real_offers', JSON.stringify(existingOffers));
+    closeModal();
+    App.showNotification('Offer Sent! 📤', `₹${price}/kg offer sent to ${trader.name}`, 'success');
+    setTimeout(() => App.navigateTo('offers'), 1000);
+  } catch (err) {
+    console.error('submitTradeOffer error:', err);
+    App.showNotification('Error', 'Failed to send offer. Try again.', 'error');
+    btn.disabled = false;
+    btn.textContent = '📤 Send Offer';
+  }
 }
 
 function viewTraderDetails(traderId) {
@@ -373,7 +580,8 @@ function viewTraderDetails(traderId) {
     <div class="detail-row"><span class="detail-label">Distance</span><span class="detail-value">${trader.distance} km</span></div>
     <div class="detail-row"><span class="detail-label">Speciality</span><span class="detail-value">${trader.speciality}</span></div>
     <div class="detail-row"><span class="detail-label">${_t('dash.dealsCompleted')}</span><span class="detail-value">${trader.totalDeals}</span></div>
-    <div style="margin-top:1.25rem;">
+    <div style="margin-top:1.25rem; display:flex; gap:0.75rem;">
+      <button class="btn btn-primary btn-sm" onclick="closeModal(); openTradeModal('${trader.id}');">🤝 ${_t('traders.makeDeal') || 'Trade Now'}</button>
       <button class="btn btn-outline btn-block" onclick="closeModal()">${_t('common.close')}</button>
     </div>
   `;

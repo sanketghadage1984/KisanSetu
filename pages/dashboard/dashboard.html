@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KisanSetu Farmer Dashboard — your crops, best traders, market prices, and offers">
+  <meta name="theme-color" content="#2D6A4F">
+  <title>Dashboard — KisanSetu</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+
+  <!-- Top Nav -->
+  <nav class="top-nav" id="topNav"></nav>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Main Content -->
+  <main class="dashboard-layout">
+    <div class="page-content">
+
+      <!-- Demo Banner -->
+      <div class="demo-banner">
+        <span class="icon">ℹ️</span>
+        <span data-i18n="dash.demo">Demo Mode — All data shown below is illustrative and not connected to live markets.</span>
+      </div>
+
+      <!-- Welcome Banner -->
+      <div class="welcome-banner animate-fade" id="welcomeBanner">
+        <div class="welcome-text">
+          <h2><span data-i18n="dash.welcome">Welcome back,</span> <span id="farmerName">Farmer</span>! 🌾</h2>
+          <p data-i18n="dash.subtitle">Here's your farming dashboard. Find the best trader for your crops today.</p>
+        </div>
+        <div class="welcome-actions">
+          <a href="../add-crop/add-crop.html" class="btn btn-accent btn-sm" data-i18n="dash.addCrop">➕ Add Crop</a>
+          <a href="../traders/traders.html" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3);" data-i18n="dash.findTraders">🤝 Find Traders</a>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card animate-fade stagger-1">
+          <div class="stat-icon green">🌱</div>
+          <div class="stat-info">
+            <div class="stat-label" data-i18n="dash.activeCrops">Active Crops</div>
+            <div class="stat-value" id="activeCropCount">0</div>
+          </div>
+        </div>
+        <div class="stat-card animate-fade stagger-2">
+          <div class="stat-icon amber">💰</div>
+          <div class="stat-info">
+            <div class="stat-label" data-i18n="dash.pendingOffers">Pending Offers</div>
+            <div class="stat-value" id="pendingOfferCount">0</div>
+          </div>
+        </div>
+        <div class="stat-card animate-fade stagger-3">
+          <div class="stat-icon blue">📊</div>
+          <div class="stat-info">
+            <div class="stat-label" data-i18n="dash.totalEarnings">Total Earnings</div>
+            <div class="stat-value" id="totalEarnings">₹0</div>
+          </div>
+        </div>
+        <div class="stat-card animate-fade stagger-4">
+          <div class="stat-icon green">✅</div>
+          <div class="stat-info">
+            <div class="stat-label" data-i18n="dash.dealsCompleted">Deals Completed</div>
+            <div class="stat-value" id="completedDeals">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ★ Best Trader Recommendation — Hero Section ★ -->
+      <div class="best-trader-section animate-fade" id="bestTraderSection">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Weather Widget -->
+      <div id="weatherWidget" class="animate-fade"></div>
+
+      <!-- AI Spoilage Alerts -->
+      <div id="aiSpoilageAlerts" class="animate-fade"></div>
+
+      <!-- Government Schemes -->
+      <div class="card animate-fade" id="govtSchemesCard" style="margin-bottom:1.25rem;">
+        <div class="card-header">
+          <h4 class="card-title">🏛️ Government Schemes For You</h4>
+        </div>
+        <div class="card-body" id="govtSchemesWidget">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Main Dashboard Grid -->
+      <div class="dashboard-grid-main">
+
+        <!-- My Crops -->
+        <div class="card animate-fade">
+          <div class="card-header">
+            <h4 class="card-title" data-i18n="dash.myCrops">🌾 My Crops</h4>
+            <a href="../add-crop/add-crop.html" class="btn btn-primary btn-sm" data-i18n="dash.add">+ Add</a>
+          </div>
+          <div class="card-body" id="cropList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Market Prices Quick View -->
+        <div class="card animate-fade">
+          <div class="card-header">
+            <h4 class="card-title" data-i18n="dash.marketPrices">📈 Market Prices</h4>
+            <a href="../market/market.html" class="btn btn-outline btn-sm" data-i18n="dash.viewAll">View All</a>
+          </div>
+          <div class="card-body" id="marketQuick">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-grid-main">
+        <!-- Recent Offers -->
+        <div class="card animate-fade">
+          <div class="card-header">
+            <h4 class="card-title" data-i18n="dash.recentOffers">💰 Recent Offers</h4>
+            <a href="../offers/offers.html" class="btn btn-outline btn-sm" data-i18n="dash.viewAll">View All</a>
+          </div>
+          <div class="card-body" id="recentOffers">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="card animate-fade">
+          <div class="card-header">
+            <h4 class="card-title" data-i18n="dash.recentTxns">📋 Recent Transactions</h4>
+          </div>
+          <div class="card-body" id="recentTransactions">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Bottom Navigation (Mobile) -->
+  <nav class="bottom-nav" id="bottomNav"></nav>
+
+  <!-- Firebase Compat CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics-compat.js"></script>
+  <script src="../../js/firebase-config.js"></script>
+  <script src="../../js/firebase-backend.js"></script>
+  <!-- App Scripts -->
+  <script src="../../js/crop-icons.js"></script>
+  <script src="../../js/data.js"></script>
+  <script src="../../js/translations.js"></script>
+  <script src="../../js/ai-engine.js"></script>
+  <script src="../../js/mandi-api.js"></script>
+  <script src="../../js/blockchain.js"></script>
+  <script src="../../js/govt-schemes.js"></script>
+  <script src="../../js/weather.js"></script>
+  <script src="../../js/app.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

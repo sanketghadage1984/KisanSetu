@@ -13,7 +13,15 @@ function getCropEmoji(name) {
 let currentView = 'cards';
 
 document.addEventListener('DOMContentLoaded', () => {
-  initMarket();
+  // Guard: must be logged in to view market prices
+  if (typeof auth !== 'undefined') {
+    auth.onAuthStateChanged(user => {
+      if (!user) { App.navigateTo('login'); return; }
+      initMarket();
+    });
+  } else {
+    initMarket();
+  }
 
   window.addEventListener('languageChanged', () => {
     initMarket();

@@ -1,24 +1,57 @@
 // ═══════════════════════════════════════════════════════
 // KisanSetu — Farmer Dashboard Logic (Firebase Firestore)
 // ═══════════════════════════════════════════════════════
+/* global App, BackendService, auth, renderTopNav, renderDashboardSidebar, renderBottomNav, getCropEmoji, KisanSetuData */
 
 let _dashCrops = [], _dashOffers = [], _dashTxns = [];
 let _unsubCrops = null, _unsubOffers = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-  auth.onAuthStateChanged(user => {
+  auth.onAuthStateChanged(async user => {
     if (!user) { App.navigateTo('login'); return; }
+    // Role guard: Traders must go to their own dashboard
+    const profile = await BackendService.getUserProfile(user.uid).catch(() => null);
+    if (profile && profile.userType === 'trader') {
+      App.navigateTo('trader-dashboard');
+      return;
+    }
+    // Sync profile to localStorage in case it was cleared
+    if (profile) {
+      localStorage.setItem('kisansetu_farmer', JSON.stringify({
+        uid: profile.uid, name: profile.name, email: profile.email,
+        phone: profile.phone || '', location: profile.location || '',
+        type: 'farmer', avatar: profile.avatar || profile.name.charAt(0)
+      }));
+      localStorage.setItem('kisansetu_userType', 'farmer');
+      localStorage.setItem('kisansetu_loggedIn', 'true');
+    }
     initDashboard(user);
   });
 
   window.addEventListener('languageChanged', () => {
     const userType = App.getUserType();
-    document.getElementById('topNav').innerHTML = `
-      <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
-      ${renderTopNav(userType)}
-    `;
-    App.initNavigation();
-    App.translatePage();
+    const topNav = document.getElementById('topNav');
+    if (topNav && typeof renderTopNav === 'function') {
+      topNav.innerHTML = `
+        <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
+        ${renderTopNav(userType)}
+      `;
+    }
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && typeof renderDashboardSidebar === 'function') {
+      sidebar.innerHTML = renderDashboardSidebar('dashboard', userType);
+    }
+    const bottomNav = document.getElementById('bottomNav');
+    if (bottomNav && typeof renderBottomNav === 'function') {
+      bottomNav.innerHTML = renderBottomNav('dashboard', userType);
+    }
+    if (App && typeof App.initNavigation === 'function') {
+      App.initNavigation();
+    }
+    if (App && typeof App.translatePage === 'function') {
+      App.translatePage();
+    }
+    populateStats();
     populateBestTrader();
     populateCrops();
     populateMarketQuick();
@@ -29,23 +62,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initDashboard(user) {
   const userType = App.getUserType();
-  document.getElementById('topNav').innerHTML = `
-    <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
-    ${renderTopNav(userType)}
-  `;
-  document.getElementById('sidebar').innerHTML = renderDashboardSidebar('dashboard', userType);
-  document.getElementById('bottomNav').innerHTML = renderBottomNav('dashboard', userType);
+  const topNav = document.getElementById('topNav');
+  if (topNav && typeof renderTopNav === 'function') {
+    topNav.innerHTML = `
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">☰</button>
+      ${renderTopNav(userType)}
+    `;
+  }
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar && typeof renderDashboardSidebar === 'function') {
+    sidebar.innerHTML = renderDashboardSidebar('dashboard', userType);
+  }
+  const bottomNav = document.getElementById('bottomNav');
+  if (bottomNav && typeof renderBottomNav === 'function') {
+    bottomNav.innerHTML = renderBottomNav('dashboard', userType);
+  }
 
   // Re-init nav after injecting
-  App.initNavigation();
-  App.translatePage();
+  if (App && typeof App.initNavigation === 'function') {
+    App.initNavigation();
+  }
+  if (App && typeof App.translatePage === 'function') {
+    App.translatePage();
+  }
 
   document.getElementById('farmerName').textContent = (user.displayName || user.name || 'Farmer').split(' ')[0];
+
+  let _firstCropLoad = true;
 
   // Real-time listener — Farmer's crops
   if (_unsubCrops) _unsubCrops();
   _unsubCrops = BackendService.listenToCrops(user.uid, (crops) => {
     _dashCrops = crops;
+
+    // Auto-seed demo data on first login if account is empty
+    if (_firstCropLoad && crops.length === 0) {
+      _firstCropLoad = false;
+      BackendService.seedDemoData(user.uid, 'farmer').catch(e => console.warn('Auto-seed failed:', e));
+      return; // Listener will fire again once seed data is written
+    }
+    _firstCropLoad = false;
+
     populateStats();
     populateBestTrader();
     populateCrops();
@@ -70,6 +127,84 @@ function initDashboard(user) {
   });
 
   populateMarketQuick();
+
+  // ── New SIH Feature Widgets ──────────────────────
+  populateWeatherWidget();
+  populateGovtSchemes();
+  populateAISpoilageAlerts();
+}
+
+// ── Weather Widget ─────────────────────────────────
+async function populateWeatherWidget() {
+  const container = document.getElementById('weatherWidget');
+  if (!container || typeof WeatherService === 'undefined') return;
+
+  const user = App.getUser();
+  const location = user?.location || '';
+
+  try {
+    const weather = await WeatherService.fetchWeather(location);
+    container.innerHTML = WeatherService.renderWidget(weather);
+
+    // Feed temperature to AI Engine for future spoilage calculations
+    window._currentWeather = weather;
+  } catch (err) {
+    console.warn('[Dashboard] Weather widget failed:', err);
+  }
+}
+
+// ── Government Schemes Widget ──────────────────────
+function populateGovtSchemes() {
+  const container = document.getElementById('govtSchemesWidget');
+  if (!container || typeof GovtSchemes === 'undefined') return;
+
+  const user = App.getUser();
+  const crops = _dashCrops.map(c => c.name || c.crop || '');
+  const eligible = GovtSchemes.checkEligibility(user || {}, crops);
+  container.innerHTML = GovtSchemes.renderWidget(eligible, 3);
+}
+
+// ── AI Spoilage Alerts ─────────────────────────────
+function populateAISpoilageAlerts() {
+  const container = document.getElementById('aiSpoilageAlerts');
+  if (!container || typeof AIEngine === 'undefined') return;
+
+  const activeCrops = _dashCrops.filter(c => c.status === 'active');
+  if (!activeCrops.length) { container.innerHTML = ''; return; }
+
+  // Check each active crop for spoilage risk
+  const alerts = activeCrops.map(crop => {
+    const risk = AIEngine.predictSpoilageRisk({
+      cropName: crop.name || crop.crop,
+      harvestDate: crop.harvestDate,
+      condition: crop.condition || 'Good',
+      temperatureC: window._currentWeather?.avgTemperature
+    });
+    return { crop, risk };
+  }).filter(a => a.risk.riskLevel === 'High' || a.risk.riskLevel === 'Critical');
+
+  if (!alerts.length) { container.innerHTML = ''; return; }
+
+  container.innerHTML = `
+    <div class="ai-analysis-card" style="margin-bottom:1.25rem;">
+      <div class="ai-analysis-header">
+        <h4>⚠️ Spoilage Risk Alerts</h4>
+        <span class="ai-badge">AI Powered</span>
+      </div>
+      ${alerts.map(a => `
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--border-light);">
+          <span style="font-size:1.5rem;">${typeof getCropEmoji === 'function' ? getCropEmoji(a.crop.name || a.crop.crop) : '🌾'}</span>
+          <div style="flex:1;">
+            <div style="font-weight:600;">${a.crop.name || a.crop.crop}</div>
+            <div class="text-sm text-muted">${a.risk.recommendations[0] || ''}</div>
+          </div>
+          <span style="background:${a.risk.riskColor};color:white;padding:0.2rem 0.6rem;border-radius:var(--radius-full);font-size:0.75rem;font-weight:700;">
+            ${a.risk.riskLevel} (${a.risk.riskPercent}%)
+          </span>
+        </div>
+      `).join('')}
+    </div>
+  `;
 }
 
 function populateStats() {
@@ -86,7 +221,10 @@ function populateStats() {
 
 function populateBestTrader() {
   const _t = window.t || ((k) => k);
-  const crops = App.getCrops().filter(c => c.status === 'active');
+  const activeCrops = (_dashCrops && _dashCrops.length) 
+    ? _dashCrops.filter(c => c.status === 'active') 
+    : App.getCrops().filter(c => c.status === 'active');
+  const crops = activeCrops;
   if (!crops.length) {
     document.getElementById('bestTraderSection').innerHTML = `
       <div class="card" style="text-align:center; padding:2rem;">
@@ -201,7 +339,7 @@ function populateBestTrader() {
       </div>
 
       <div class="best-trader-actions">
-        <a href="../traders/traders.html" class="btn btn-primary">${_t('dash.viewTrader')}</a>
+        <a href="../traders/traders.html?trader=${trader.id}" class="btn btn-primary">${_t('dash.viewTrader')}</a>
         <button class="btn btn-accent" onclick="quickDeal('${crop.id}', '${trader.id}')">${_t('dash.makeDeal')}</button>
         <a href="../traders/traders.html" class="btn btn-outline">${_t('dash.compareAll')}</a>
       </div>
@@ -320,8 +458,68 @@ function populateRecentTransactions() {
   `).join('');
 }
 
-function quickDeal(cropId, traderId) {
-  App.showNotification('Deal Initiated', 'Redirecting to offers page...', 'success');
+async function quickDeal(cropId, traderId) {
+  const trader = KisanSetuData.traders.find(t => t.id === traderId) || { name: 'Verified Trader', offers: {} };
+  const crops = _dashCrops.length ? _dashCrops : App.getCrops();
+  const crop = crops.find(c => c.id === cropId) || { name: 'Crop', variety: '', quantity: 1000 };
+  const offer = (trader.offers && trader.offers[cropId]) ? trader.offers[cropId] : { pricePerKg: crop.expectedPrice || 30, quantityNeeded: crop.quantity || 1000, transportCost: 1200 };
+  const user = (typeof auth !== 'undefined') ? auth.currentUser : null;
+
+  const newOffer = {
+    id: App.generateId('offer'),
+    cropId: cropId,
+    cropName: `${crop.name} (${crop.variety || ''})`,
+    farmerId: user ? user.uid : 'farmer_current',
+    farmerName: user ? (user.displayName || 'Farmer') : 'Farmer',
+    traderId: traderId,
+    traderName: trader.name,
+    offerPrice: offer.pricePerKg,
+    quantity: Math.min(offer.quantityNeeded || 1000, crop.quantity || 1000),
+    unit: 'kg',
+    status: 'accepted',
+    date: new Date().toISOString().split('T')[0],
+    messages: [
+      { 
+        from: 'farmer', 
+        text: `Deal accepted at ₹${offer.pricePerKg}/kg`, 
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+      }
+    ],
+    createdAt: (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore.FieldValue.serverTimestamp() : new Date()
+  };
+
+  // 1. Save to local state
+  const offers = App.getOffers() || [];
+  offers.unshift(newOffer);
+  App.saveOffers(offers);
+  localStorage.setItem('kisansetu_real_offers', JSON.stringify(offers));
+
+  // 2. Save to Firestore
+  if (user && typeof db !== 'undefined') {
+    try {
+      await db.collection('offers').doc(newOffer.id).set(newOffer);
+      const txnRef = db.collection('transactions').doc();
+      await txnRef.set({
+        offerId: newOffer.id,
+        cropId: cropId,
+        cropName: newOffer.cropName,
+        farmerId: user.uid,
+        traderId: traderId,
+        traderName: trader.name,
+        quantity: newOffer.quantity,
+        unit: 'kg',
+        price: offer.pricePerKg,
+        totalAmount: offer.pricePerKg * newOffer.quantity,
+        netAmount: Math.max(0, (offer.pricePerKg * newOffer.quantity) - (offer.transportCost || 1200)),
+        date: firebase.firestore.FieldValue.serverTimestamp(),
+        status: 'completed'
+      });
+    } catch(err) {
+      console.warn('quickDeal Firestore write warning:', err);
+    }
+  }
+
+  App.showNotification('Deal Accepted! 🎉', `Deal initiated with ${trader.name} at ₹${offer.pricePerKg}/kg`, 'success');
   setTimeout(() => App.navigateTo('offers'), 800);
 }
 

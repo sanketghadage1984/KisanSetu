@@ -16,8 +16,24 @@ function getCropEmoji(name) {
 >>>>>>> parent of b40a222 (Update crop icons, add dark mode, and fix animations)
 
 document.addEventListener('DOMContentLoaded', () => {
-  auth.onAuthStateChanged(user => {
+  auth.onAuthStateChanged(async user => {
     if (!user) { App.navigateTo('login'); return; }
+    // Role guard: Farmers must go to their own dashboard
+    const profile = await BackendService.getUserProfile(user.uid).catch(() => null);
+    if (profile && profile.userType === 'farmer') {
+      App.navigateTo('dashboard');
+      return;
+    }
+    // Sync profile to localStorage in case it was cleared
+    if (profile) {
+      localStorage.setItem('kisansetu_trader', JSON.stringify({
+        uid: profile.uid, name: profile.name, email: profile.email,
+        phone: profile.phone || '', location: profile.location || '',
+        type: 'trader', avatar: profile.avatar || profile.name.charAt(0)
+      }));
+      localStorage.setItem('kisansetu_userType', 'trader');
+      localStorage.setItem('kisansetu_loggedIn', 'true');
+    }
     initTraderDashboard(user);
   });
 
@@ -46,10 +62,21 @@ function initTraderDashboard(user) {
 
   document.getElementById('traderName').textContent = user.displayName?.split(' ')[0] || 'Trader';
 
+  let _firstListingLoad = true;
+
   // Real-time listener for all active crops from Firestore
   if (_unsubscribeListings) _unsubscribeListings();
   _unsubscribeListings = BackendService.listenToAllCrops((crops) => {
     _allListings = crops;
+
+    // Auto-seed demo crops if marketplace is empty (for demo/guest users)
+    if (_firstListingLoad && crops.length === 0) {
+      _firstListingLoad = false;
+      BackendService.seedDemoData(user.uid, 'trader').catch(e => console.warn('Auto-seed failed:', e));
+      return; // Listener will fire again once seed data is written
+    }
+    _firstListingLoad = false;
+
     document.getElementById('listingCount').textContent = crops.length;
     renderListings();
   });

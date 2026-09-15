@@ -1,0 +1,9 @@
+{
+  "name": "kisansetu",
+  "version": "1.0.0",
+  "description": "KisanSetu — Direct Farmer-to-Trader Marketplace",
+  "scripts": {
+    "start": "python server.py",
+    "serve": "python server.py"
+  }
+}

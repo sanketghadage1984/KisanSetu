@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KisanSetu Farmer Community — Ask questions, share tips, and connect with fellow farmers">
+  <meta name="theme-color" content="#2D6A4F">
+  <title>Community — KisanSetu</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
+  <link rel="manifest" href="../../manifest.json">
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="community.css">
+</head>
+<body>
+  <nav class="top-nav" id="topNav"></nav>
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="dashboard-layout">
+    <div class="page-content">
+      <div class="dashboard-header">
+        <div>
+          <h1 class="dashboard-title" data-i18n="community.title">👥 Farmer Community</h1>
+          <p class="dashboard-subtitle" data-i18n="community.subtitle">Ask questions, share tips, and learn from fellow farmers</p>
+        </div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="tabs" id="communityTabs">
+        <button class="tab active" onclick="filterPosts('all', this)" data-i18n="community.all">All</button>
+        <button class="tab" onclick="filterPosts('pricing', this)">💰 Pricing Tips</button>
+        <button class="tab" onclick="filterPosts('cropcare', this)">🌱 Crop Care</button>
+        <button class="tab" onclick="filterPosts('weather', this)">🌦️ Weather</button>
+        <button class="tab" onclick="filterPosts('schemes', this)">🏛️ Govt Schemes</button>
+        <button class="tab" onclick="filterPosts('millets', this)">🌾 Millets</button>
+      </div>
+
+      <!-- Ask a Question -->
+      <div class="card animate-fade" style="margin-bottom:1.5rem;">
+        <div class="card-body">
+          <h4 style="margin-bottom:0.75rem;" data-i18n="community.askQuestion">💬 Ask a Question</h4>
+          <form id="postForm" onsubmit="return submitPost(event)">
+            <div class="form-group" style="margin-bottom:0.75rem;">
+              <input type="text" id="postTitle" class="form-control" placeholder="What's your question?" required style="font-weight:600;">
+            </div>
+            <div class="form-row" style="gap:0.75rem;">
+              <div class="form-group" style="flex:2;">
+                <textarea id="postBody" class="form-control" placeholder="Share more details..." rows="2"></textarea>
+              </div>
+              <div class="form-group" style="flex:0 0 auto;">
+                <select id="postCategory" class="form-control">
+                  <option value="pricing">💰 Pricing</option>
+                  <option value="cropcare">🌱 Crop Care</option>
+                  <option value="weather">🌦️ Weather</option>
+                  <option value="schemes">🏛️ Schemes</option>
+                  <option value="millets">🌾 Millets</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm" style="margin-top:0.75rem;" data-i18n="community.post">📝 Post Question</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Posts List -->
+      <div id="postsList"></div>
+
+    </div>
+  </main>
+
+  <nav class="bottom-nav" id="bottomNav"></nav>
+
+  <!-- Firebase Compat CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics-compat.js"></script>
+  <script src="../../js/firebase-config.js"></script>
+  <script src="../../js/firebase-backend.js"></script>
+  <!-- App Scripts -->
+  <script src="../../js/crop-icons.js"></script>
+  <script src="../../js/data.js"></script>
+  <script src="../../js/translations.js"></script>
+  <script src="../../js/app.js"></script>
+  <script src="community.js"></script>
+</body>
+</html>
