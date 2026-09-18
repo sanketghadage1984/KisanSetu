@@ -83,11 +83,19 @@ if hasattr(sys.stdout, 'reconfigure'):
         pass
 
 def run(port=PORT):
-    # Allow port reuse so restarting doesn't hit "Address already in use"
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", port), KisanSetuHandler) as httpd:
+    # Use ThreadingHTTPServer so concurrent requests are served in parallel without blocking
+    if hasattr(http.server, 'ThreadingHTTPServer'):
+        ServerClass = http.server.ThreadingHTTPServer
+    else:
+        class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+            allow_reuse_address = True
+            daemon_threads = True
+        ServerClass = ThreadedServer
+
+    ServerClass.allow_reuse_address = True
+    with ServerClass(("", port), KisanSetuHandler) as httpd:
         print(f"\n=======================================================")
-        print(f"[KisanSetu] Server is running!")
+        print(f"[KisanSetu] Multi-threaded Server is running!")
         print(f"Website URL: http://localhost:{port}")
         print(f"=======================================================\n")
         try:

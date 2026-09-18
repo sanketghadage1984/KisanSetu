@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Create your KisanSetu account — join as a farmer or trader">
   <title>Register — KisanSetu</title>
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌾</text></svg>">
   <link rel="stylesheet" href="../../css/style.css">
   <link rel="stylesheet" href="register.css">
@@ -12,32 +15,36 @@
 <body>
   <div class="auth-page">
     <div class="auth-container animate-scale" style="max-width:480px;">
-      <div style="display:flex; justify-content:flex-end; margin-bottom:1rem;">
+      <div style="display:flex; justify-content:flex-end; align-items:center; gap:0.5rem; margin-bottom:1rem;">
+        <button class="theme-toggle-btn" id="themeToggle" aria-label="Toggle Theme" title="Toggle Light / Dark Mode">
+          <span class="theme-icon">🌙</span>
+        </button>
         <div class="lang-selector">
+          <span class="lang-icon">🌐</span>
           <select class="lang-dropdown" aria-label="Select Language">
             <option value="en" selected>English</option>
-            <option value="hi">हिंदी — Hindi</option>
-            <option value="mr">मराठी — Marathi</option>
-            <option value="bn" disabled>বাংলা — Bengali (Coming Soon)</option>
-            <option value="te" disabled>తెలుగు — Telugu (Coming Soon)</option>
-            <option value="ta" disabled>தமிழ் — Tamil (Coming Soon)</option>
-            <option value="gu" disabled>ગુજરાતી — Gujarati (Coming Soon)</option>
-            <option value="kn" disabled>ಕನ್ನಡ — Kannada (Coming Soon)</option>
-            <option value="ml" disabled>മലയാളം — Malayalam (Coming Soon)</option>
-            <option value="pa" disabled>ਪੰਜਾਬੀ — Punjabi (Coming Soon)</option>
-            <option value="or" disabled>ଓଡ଼ିଆ — Odia (Coming Soon)</option>
-            <option value="as" disabled>অসমীয়া — Assamese (Coming Soon)</option>
-            <option value="ur" disabled>اردو — Urdu (Coming Soon)</option>
-            <option value="mai" disabled>मैथिली — Maithili (Coming Soon)</option>
-            <option value="sat" disabled>ᱥᱟᱱᱛᱟᱲᱤ — Santali (Coming Soon)</option>
-            <option value="ks" disabled>کٲشُر — Kashmiri (Coming Soon)</option>
-            <option value="ne" disabled>नेपाली — Nepali (Coming Soon)</option>
-            <option value="sd" disabled>سنڌي — Sindhi (Coming Soon)</option>
-            <option value="kok" disabled>कोंकणी — Konkani (Coming Soon)</option>
-            <option value="doi" disabled>डोगरी — Dogri (Coming Soon)</option>
-            <option value="mni" disabled>মৈতৈলোন্ — Manipuri (Coming Soon)</option>
-            <option value="brx" disabled>बड़ो — Bodo (Coming Soon)</option>
-            <option value="sa" disabled>संस्कृतम् — Sanskrit (Coming Soon)</option>
+            <option value="hi">हिंदी (Hindi)</option>
+            <option value="mr">मराठी (Marathi)</option>
+            <option value="bn" disabled>বাংলা (Bengali) — Soon</option>
+            <option value="te" disabled>తెలుగు (Telugu) — Soon</option>
+            <option value="ta" disabled>தமிழ் (Tamil) — Soon</option>
+            <option value="gu" disabled>ગુજરાતી (Gujarati) — Soon</option>
+            <option value="kn" disabled>ಕನ್ನಡ (Kannada) — Soon</option>
+            <option value="ml" disabled>മലയാളം (Malayalam) — Soon</option>
+            <option value="pa" disabled>ਪੰਜਾਬੀ (Punjabi) — Soon</option>
+            <option value="or" disabled>ଓଡ଼ିଆ (Odia) — Soon</option>
+            <option value="as" disabled>অসমীয়া (Assamese) — Soon</option>
+            <option value="ur" disabled>اردو (Urdu) — Soon</option>
+            <option value="mai" disabled>मैथिली (Maithili) — Soon</option>
+            <option value="sat" disabled>ᱥᱟᱱᱛᱟᱲᱤ (Santali) — Soon</option>
+            <option value="ks" disabled>کٲشُر (Kashmiri) — Soon</option>
+            <option value="ne" disabled>नेपाली (Nepali) — Soon</option>
+            <option value="sd" disabled>سنڌي (Sindhi) — Soon</option>
+            <option value="kok" disabled>कोंकणी (Konkani) — Soon</option>
+            <option value="doi" disabled>डोगरी (Dogri) — Soon</option>
+            <option value="mni" disabled>মৈতৈলোন্ (Manipuri) — Soon</option>
+            <option value="brx" disabled>बड़ो (Bodo) — Soon</option>
+            <option value="sa" disabled>संस्कृतम् (Sanskrit) — Soon</option>
           </select>
         </div>
       </div>
@@ -120,12 +127,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics-compat.js"></script>
   <!-- KisanSetu Config & Backend -->
-  <script src="../../js/firebase-config.js"></script>
-  <script src="../../js/firebase-backend.js"></script>
+  <script defer src="../../js/firebase-config.js"></script>
+  <script defer src="../../js/firebase-backend.js"></script>
   <!-- App Scripts -->
-  <script src="../../js/data.js"></script>
-  <script src="../../js/translations.js"></script>
-  <script src="../../js/app.js"></script>
-  <script src="register.js"></script>
+  <script defer src="../../js/data.js"></script>
+  <script defer src="../../js/translations.js"></script>
+  <script defer src="../../js/app.js"></script>
+  <script defer src="register.js"></script>
 </body>
 </html>

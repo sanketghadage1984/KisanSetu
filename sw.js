@@ -3,9 +3,9 @@
    Cache static assets, handle offline, background sync
    ═══════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'kisansetu-v2';
-const STATIC_CACHE = 'kisansetu-static-v2';
-const DATA_CACHE = 'kisansetu-data-v2';
+const CACHE_NAME = 'kisansetu-v3';
+const STATIC_CACHE = 'kisansetu-static-v3';
+const DATA_CACHE = 'kisansetu-data-v3';
 
 // Static assets to pre-cache on install
 const STATIC_ASSETS = [
@@ -142,30 +142,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets — Cache first, network fallback
+  // Static assets — Network first (for latest updates), cache fallback for offline
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(event.request)
-        .then((response) => {
-          // Don't cache non-ok responses
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-          const clone = response.clone();
-          caches.open(STATIC_CACHE).then((cache) => {
-            cache.put(event.request, clone);
-          });
+    fetch(event.request)
+      .then((response) => {
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
-        })
-        .catch(() => {
-          // Offline fallback for HTML pages
+        }
+        const clone = response.clone();
+        caches.open(STATIC_CACHE).then((cache) => {
+          cache.put(event.request, clone);
+        });
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cached) => {
+          if (cached) return cached;
           if (event.request.headers.get('accept')?.includes('text/html')) {
             return caches.match('/index.html');
           }
         });
-    })
+      })
   );
 });
 

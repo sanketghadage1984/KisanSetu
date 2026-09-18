@@ -276,6 +276,35 @@ const Translations = {
     'common.upcoming': 'Upcoming',
     'common.cancel': 'Cancel',
     'common.close': 'Close',
+
+    // Payment & Escrow
+    'payment.title': 'Secure Payment',
+    'payment.subtitle': 'Track your deal progress and escrow release',
+    'payment.step1': 'Deal Confirmed',
+    'payment.step2': 'Escrow Payment',
+    'payment.step3': 'Dispatch & Tracking',
+    'payment.step4': 'Delivery & Payout',
+    'payment.deposit': 'Deposit into Escrow',
+    'payment.dispatch': 'Dispatch Produce',
+    'payment.confirmDelivery': 'Confirm Delivery & Release Payment',
+    'payment.receipt': 'Download Receipt',
+    'payment.back': 'Back to Dashboard',
+    
+    // AI & Voice
+    'ai.spoilageRisk': 'Spoilage Risk',
+    'ai.advisory': 'AI Advisory',
+    'voice.record': 'Start Recording',
+    'voice.stop': 'Stop Recording',
+    
+    // Alerts & Community
+    'alerts.sms': 'SMS Alerts',
+    'alerts.whatsapp': 'WhatsApp Alerts',
+    'community.title': 'Community Forum',
+    'community.subtitle': 'Connect with local farmers and experts',
+    
+    // Profile missing
+    'profile.title': 'My Profile',
+    'profile.subtitle': 'Manage your personal details and app preferences',
   },
 
   hi: {
@@ -529,6 +558,35 @@ const Translations = {
     'common.upcoming': 'आगामी',
     'common.cancel': 'रद्द करें',
     'common.close': 'बंद करें',
+
+    // Payment & Escrow
+    'payment.title': 'सुरक्षित भुगतान',
+    'payment.subtitle': 'अपने सौदे की प्रगति और भुगतान ट्रैक करें',
+    'payment.step1': 'सौदा पक्का',
+    'payment.step2': 'एस्क्रो भुगतान',
+    'payment.step3': 'माल भेजना और ट्रैकिंग',
+    'payment.step4': 'डिलीवरी और भुगतान',
+    'payment.deposit': 'एस्क्रो में जमा करें',
+    'payment.dispatch': 'उत्पाद भेजें',
+    'payment.confirmDelivery': 'डिलीवरी की पुष्टि करें और भुगतान जारी करें',
+    'payment.receipt': 'रसीद डाउनलोड करें',
+    'payment.back': 'डैशबोर्ड पर वापस जाएं',
+
+    // AI & Voice
+    'ai.spoilageRisk': 'खराब होने का जोखिम',
+    'ai.advisory': 'AI सलाह',
+    'voice.record': 'रिकॉर्डिंग शुरू करें',
+    'voice.stop': 'रिकॉर्डिंग रोकें',
+
+    // Alerts & Community
+    'alerts.sms': 'SMS अलर्ट',
+    'alerts.whatsapp': 'WhatsApp अलर्ट',
+    'community.title': 'किसान मंच',
+    'community.subtitle': 'स्थानीय किसानों और विशेषज्ञों से जुड़ें',
+
+    // Profile missing
+    'profile.title': 'मेरी प्रोफ़ाइल',
+    'profile.subtitle': 'अपना व्यक्तिगत विवरण प्रबंधित करें',
   },
 
   mr: {
@@ -779,6 +837,35 @@ const Translations = {
     'common.upcoming': 'आगामी',
     'common.cancel': 'रद्द करा',
     'common.close': 'बंद करा',
+
+    // Payment & Escrow
+    'payment.title': 'सुरक्षित पेमेंट',
+    'payment.subtitle': 'तुमच्या व्यवहाराची प्रगती आणि पेमेंट ट्रॅक करा',
+    'payment.step1': 'व्यवहार निश्चित',
+    'payment.step2': 'एस्क्रो पेमेंट',
+    'payment.step3': 'माल पाठवणे',
+    'payment.step4': 'डिलिव्हरी आणि पेमेंट',
+    'payment.deposit': 'एस्क्रो मध्ये जमा करा',
+    'payment.dispatch': 'माल पाठवा',
+    'payment.confirmDelivery': 'डिलिव्हरीची पुष्टी करा आणि पेमेंट रिलीज करा',
+    'payment.receipt': 'पावती डाउनलोड करा',
+    'payment.back': 'डॅशबोर्डवर परत जा',
+
+    // AI & Voice
+    'ai.spoilageRisk': 'खराब होण्याचा धोका',
+    'ai.advisory': 'AI सल्ला',
+    'voice.record': 'रेकॉर्डिंग सुरू करा',
+    'voice.stop': 'रेकॉर्डिंग थांबवा',
+
+    // Alerts & Community
+    'alerts.sms': 'SMS अलर्ट',
+    'alerts.whatsapp': 'WhatsApp अलर्ट',
+    'community.title': 'शेतकरी मंच',
+    'community.subtitle': 'स्थानिक शेतकरी आणि तज्ञांशी जोडा',
+
+    // Profile missing
+    'profile.title': 'माझी प्रोफाइल',
+    'profile.subtitle': 'तुमचे वैयक्तिक तपशील व्यवस्थापित करा',
   }
 };
 

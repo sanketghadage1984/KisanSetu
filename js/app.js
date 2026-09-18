@@ -6,6 +6,7 @@
 const App = {
   // ── Initialize ────────────────────────────────────
   init() {
+    this.initTheme();
     this.initLocalStorage();
     this.initNavigation();
     this.initGlobalLangListener();
@@ -469,6 +470,61 @@ const App = {
     });
   },
 
+  // ── Theme Management (Dark / Light Mode) ─────────
+  getTheme() {
+    return localStorage.getItem('kisansetu_theme') || 'light';
+  },
+
+  setTheme(theme) {
+    const validTheme = theme === 'dark' ? 'dark' : 'light';
+    localStorage.setItem('kisansetu_theme', validTheme);
+    document.documentElement.setAttribute('data-theme', validTheme);
+    if (document.body) document.body.setAttribute('data-theme', validTheme);
+
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+      const icon = btn.querySelector('.theme-icon') || btn;
+      icon.textContent = validTheme === 'dark' ? '☀️' : '🌙';
+      const label = validTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+      btn.setAttribute('title', label);
+      btn.setAttribute('aria-label', label);
+    });
+
+    window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: validTheme } }));
+  },
+
+  toggleTheme() {
+    const current = this.getTheme();
+    const next = current === 'dark' ? 'light' : 'dark';
+    this.setTheme(next);
+    this.showNotification('Theme Changed', next === 'dark' ? '🌙 Dark Mode Activated' : '☀️ Light Mode Activated', 'info');
+  },
+
+  _themeDelegated: false,
+  initTheme() {
+    const theme = this.getTheme();
+    document.documentElement.setAttribute('data-theme', theme);
+    if (document.body) document.body.setAttribute('data-theme', theme);
+
+    if (!this._themeDelegated) {
+      this._themeDelegated = true;
+      document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.theme-toggle-btn');
+        if (btn) {
+          e.preventDefault();
+          App.toggleTheme();
+        }
+      });
+    }
+
+    document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+      const icon = btn.querySelector('.theme-icon') || btn;
+      icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+      const label = theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+      btn.setAttribute('title', label);
+      btn.setAttribute('aria-label', label);
+    });
+  },
+
   // ── Notifications (Toast) ────────────────────────
   showNotification(title, message, type = 'info') {
     document.querySelectorAll('.notification-toast').forEach(el => el.remove());
@@ -744,18 +800,27 @@ function renderTopNav(userType) {
   const name = user ? user.name : 'User';
   const avatar = user ? (user.avatar || name.charAt(0)) : 'U';
   const currentLang = App.getLang();
+  const currentTheme = App.getTheme();
 
   const langOptions = App.ALL_LANGS.map(l => {
     const isActive = App.ACTIVE_LANGS.includes(l.code);
     const suffix = isActive ? '' : ' (Coming Soon)';
     const disabled = isActive ? '' : 'disabled';
-    return `<option value="${l.code}" ${l.code === currentLang ? 'selected' : ''} ${disabled}>${l.native} — ${l.label}${suffix}</option>`;
+    const text = l.code === 'en' ? 'English' : `${l.native} (${l.label})${suffix}`;
+    return `<option value="${l.code}" ${l.code === currentLang ? 'selected' : ''} ${disabled}>${text}</option>`;
   }).join('');
+
+  const themeLabel = currentTheme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+  const themeIcon = currentTheme === 'dark' ? '☀️' : '🌙';
 
   return `
     <a href="${base}index.html" class="nav-logo">🌾 Kisan<span>Setu</span></a>
     <div class="nav-actions">
+      <button class="theme-toggle-btn" id="themeToggle" aria-label="${themeLabel}" title="${themeLabel}">
+        <span class="theme-icon">${themeIcon}</span>
+      </button>
       <div class="lang-selector">
+        <span class="lang-icon">🌐</span>
         <select class="lang-dropdown" aria-label="Select Language">
           ${langOptions}
         </select>
