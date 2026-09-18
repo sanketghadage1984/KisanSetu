@@ -76,13 +76,19 @@ class KisanSetuHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
         super().end_headers()
 
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
+
 def run(port=PORT):
     # Allow port reuse so restarting doesn't hit "Address already in use"
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", port), KisanSetuHandler) as httpd:
         print(f"\n=======================================================")
-        print(f"🌾 KisanSetu Server is running!")
-        print(f"🔗 Website URL: http://localhost:{port}")
+        print(f"[KisanSetu] Server is running!")
+        print(f"Website URL: http://localhost:{port}")
         print(f"=======================================================\n")
         try:
             httpd.serve_forever()

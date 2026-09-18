@@ -1,7 +1,7 @@
-/* Trader Dashboard specific styles */
+/* Trader Dashboard specific styles — Blue/Teal theme (distinct from farmer green) */
 
 .trader-welcome {
-  background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 50%, #40916C 100%);
+  background: linear-gradient(135deg, #0D47A1 0%, #1565C0 40%, #1E88E5 100%);
   border-radius: var(--radius-xl);
   padding: 1.75rem 2rem;
   color: white;
@@ -21,8 +21,33 @@
   background: rgba(255,255,255,0.06);
 }
 
+.trader-welcome::before {
+  content: '';
+  position: absolute;
+  left: -60px;
+  bottom: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+}
+
 .trader-welcome h2 { color: white; font-size: 1.4rem; margin-bottom: 0.25rem; }
 .trader-welcome p { opacity: 0.85; font-size: 0.95rem; }
+
+.trader-role-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 0.2rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  border: 1px solid rgba(255,255,255,0.3);
+}
 
 .listings-grid {
   display: grid;
@@ -36,11 +61,13 @@
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   transition: var(--transition);
+  border-left: 3px solid #1565C0;
 }
 
 .listing-card:hover {
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
+  border-left-color: #0D47A1;
 }
 
 .listing-header {
@@ -54,7 +81,7 @@
   width: 44px;
   height: 44px;
   border-radius: var(--radius);
-  background: var(--primary-50);
+  background: rgba(21, 101, 192, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -85,6 +112,65 @@
   font-weight: 600;
   color: var(--text);
 }
+
+/* Offer Modal */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-overlay.active {
+  display: flex;
+}
+.modal-box {
+  background: var(--card);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: modal-in 0.25s ease;
+}
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { margin: 0; font-size: 1.1rem; }
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0.25rem;
+  transition: color 0.2s;
+}
+.modal-close:hover { color: var(--danger); }
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed var(--border-light);
+}
+.detail-label { color: var(--text-muted); font-size: 0.85rem; }
+.detail-value { font-weight: 600; font-size: 0.9rem; }
 
 @media (max-width: 768px) {
   .listings-grid { grid-template-columns: 1fr; }

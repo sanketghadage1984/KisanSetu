@@ -1,0 +1,453 @@
+/* ═══════════════════════════════════════════════════════
+   Payment & Escrow Page — Premium Styles
+   ═══════════════════════════════════════════════════════ */
+
+/* Hero */
+.payment-hero {
+  background: linear-gradient(135deg, #1B4332 0%, #2D6A4F 50%, #40916C 100%);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  color: white;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.payment-hero::after {
+  content: '';
+  position: absolute;
+  right: -40px; top: -40px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+}
+.payment-hero-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 0.3rem 1rem;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 0.75rem;
+}
+.payment-hero-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+}
+.payment-hero-sub {
+  opacity: 0.85;
+  font-size: 0.92rem;
+}
+
+/* Transaction Summary */
+.txn-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.txn-summary-header h3 { margin: 0; font-size: 1.05rem; }
+
+.txn-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.txn-item {
+  padding: 0.6rem;
+  background: var(--bg);
+  border-radius: 8px;
+}
+.txn-item-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--text-muted);
+}
+.txn-item-value {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 0.15rem;
+}
+
+/* 4-Step Stepper */
+.payment-stepper {
+  position: relative;
+  padding: 0;
+}
+
+.step-item {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.step-item.completed {
+  border-color: #2D6A4F;
+  background: rgba(45, 106, 79, 0.04);
+}
+.step-item.active {
+  border-color: #1565C0;
+  background: rgba(21, 101, 192, 0.04);
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.12);
+}
+.step-item.pending {
+  opacity: 0.6;
+}
+
+.step-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+  transition: all 0.3s ease;
+}
+.step-item.completed .step-circle {
+  background: #D8F3DC;
+  border-color: #2D6A4F;
+}
+.step-item.active .step-circle {
+  background: #E3F2FD;
+  border-color: #1565C0;
+  animation: pulse-ring 2s ease infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(21, 101, 192, 0.3); }
+  50% { box-shadow: 0 0 0 8px rgba(21, 101, 192, 0); }
+}
+
+.step-content { flex: 1; }
+.step-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+}
+.step-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+.step-status {
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.step-status.done { color: #2D6A4F; }
+.step-status.in-progress { color: #1565C0; }
+.step-status.waiting { color: var(--text-muted); }
+
+.step-action { margin-top: 0.75rem; }
+
+.step-connector {
+  width: 2px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 auto;
+  transition: background 0.3s ease;
+}
+.step-connector.filled {
+  background: linear-gradient(180deg, #2D6A4F, #52B788);
+}
+
+/* Payment Simulation */
+.payment-sim-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.payment-sim-header h3 { margin: 0; font-size: 1.05rem; }
+
+.escrow-badge-sm {
+  background: #1B4332;
+  color: #D8F3DC;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.payment-options {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.payment-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--card);
+}
+.payment-option input { display: none; }
+.payment-option.selected {
+  border-color: #1565C0;
+  background: rgba(21, 101, 192, 0.04);
+}
+.payment-option:hover {
+  border-color: var(--primary);
+}
+
+.payment-option-icon { font-size: 1.5rem; }
+.payment-option-title { font-size: 0.88rem; font-weight: 700; }
+.payment-option-desc { font-size: 0.72rem; color: var(--text-muted); }
+
+.upi-mockup {
+  background: linear-gradient(135deg, #0D47A1, #1565C0);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.upi-mockup::after {
+  content: '';
+  position: absolute;
+  right: -20px; top: -20px;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+}
+.upi-amount {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+}
+.upi-id {
+  font-size: 0.82rem;
+  opacity: 0.8;
+  font-family: monospace;
+}
+.upi-note {
+  font-size: 0.75rem;
+  opacity: 0.65;
+  margin-top: 0.25rem;
+}
+
+/* Success Animation */
+.payment-success {
+  text-align: center;
+  padding: 2rem;
+  margin-top: 1.5rem;
+}
+
+.success-checkmark {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2D6A4F, #52B788);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  animation: success-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.check-icon {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 800;
+}
+
+@keyframes success-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.payment-success h3 {
+  color: var(--primary);
+  font-size: 1.3rem;
+  margin-bottom: 0.3rem;
+}
+.payment-success p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* Receipt */
+.receipt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  text-align: left;
+  max-width: 400px;
+  margin: 0 auto;
+}
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed var(--border-light);
+  grid-column: 1 / -1;
+}
+.receipt-label { font-size: 0.82rem; color: var(--text-muted); }
+.receipt-value { font-size: 0.85rem; font-weight: 700; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .txn-summary-grid { grid-template-columns: 1fr; }
+  .payment-options { flex-direction: column; }
+  .step-item { flex-direction: column; text-align: center; }
+  .step-circle { margin: 0 auto; }
+  .payment-hero-title { font-size: 1.2rem; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   DEDICATED FARMER PAYOUT & DISPATCH STYLES
+   ═══════════════════════════════════════════════════════ */
+.farmer-guarantee-box {
+  background: #E8F5E9;
+  border: 1.5px solid #52B788;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.guarantee-icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.guarantee-title {
+  font-weight: 800;
+  color: #1B4332;
+  font-size: 0.95rem;
+  margin-bottom: 0.25rem;
+}
+
+.guarantee-desc {
+  font-size: 0.84rem;
+  color: #2D6A4F;
+  line-height: 1.4;
+}
+
+/* Farmer Dispatch Form */
+.dispatch-form-card {
+  background: #FFFFFF;
+  border: 1.5px solid #2D6A4F;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 14px rgba(45,106,79,0.08);
+}
+
+.dispatch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.dispatch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  .dispatch-grid { grid-template-columns: 1fr; }
+}
+
+/* Official e-Way Challan Card */
+.eway-challan-card {
+  background: #FFFFFF;
+  border: 2px dashed #2D6A4F;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  position: relative;
+}
+
+.challan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #1B4332;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.challan-badge {
+  background: #1B4332;
+  color: #FFFFFF;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.challan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.challan-field-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.challan-field-val {
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Farmer Bank Account Details Box */
+.bank-payout-box {
+  background: #F4FAF6;
+  border: 1.5px solid #A7D7C5;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.bank-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(45,106,79,0.1);
+}
+
+.bank-row:last-child {
+  border-bottom: none;
+}
+

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KisanSetu Secure Payment — Escrow-protected transactions between farmers and traders">
+  <meta name="theme-color" content="#2D6A4F">
+  <title>Payment & Escrow — KisanSetu</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💳</text></svg>">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="payment.css">
+</head>
+<body>
+  <nav class="top-nav" id="topNav"></nav>
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="dashboard-layout">
+    <div class="page-content" style="max-width:800px;">
+
+      <!-- Payment Header -->
+      <div class="payment-hero animate-fade">
+        <div class="payment-hero-badge">🛡️ ESCROW-SECURED TRANSACTION</div>
+        <h1 class="payment-hero-title">Payment & Settlement</h1>
+        <p class="payment-hero-sub" id="paymentSubtitle">Processing your crop deal securely</p>
+      </div>
+
+      <!-- Transaction Summary Card -->
+      <div class="card animate-fade" id="txnSummaryCard" style="margin-bottom:1.5rem;">
+        <div class="txn-summary-header">
+          <h3>📋 Transaction Summary</h3>
+          <span class="badge badge-success" id="txnStatusBadge">Deal Confirmed</span>
+        </div>
+        <div class="txn-summary-grid" id="txnSummaryGrid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- 4-Step Progress Stepper -->
+      <div class="payment-stepper animate-fade" id="paymentStepper">
+        <div class="step-item completed" id="step1">
+          <div class="step-circle">✅</div>
+          <div class="step-content">
+            <div class="step-title">1. Deal Confirmed</div>
+            <div class="step-desc">Both parties agreed on price and quantity</div>
+            <div class="step-status done">Completed</div>
+          </div>
+        </div>
+
+        <div class="step-connector" id="conn12"></div>
+
+        <div class="step-item" id="step2">
+          <div class="step-circle">💳</div>
+          <div class="step-content">
+            <div class="step-title">2. Escrow Payment</div>
+            <div class="step-desc">Buyer deposits funds into KisanSetu escrow vault</div>
+            <div class="step-status" id="step2Status">Pending</div>
+            <div class="step-action" id="step2Action"></div>
+          </div>
+        </div>
+
+        <div class="step-connector" id="conn23"></div>
+
+        <div class="step-item" id="step3">
+          <div class="step-circle">🚚</div>
+          <div class="step-content">
+            <div class="step-title">3. Dispatch & Tracking</div>
+            <div class="step-desc">Farmer dispatches produce with GPS tracking</div>
+            <div class="step-status" id="step3Status">Pending</div>
+            <div class="step-action" id="step3Action"></div>
+          </div>
+        </div>
+
+        <div class="step-connector" id="conn34"></div>
+
+        <div class="step-item" id="step4">
+          <div class="step-circle">🎉</div>
+          <div class="step-content">
+            <div class="step-title">4. Delivery & Payout</div>
+            <div class="step-desc">Buyer confirms delivery, funds released to farmer</div>
+            <div class="step-status" id="step4Status">Pending</div>
+            <div class="step-action" id="step4Action"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trader Payment Simulation Card (only shown for traders at step 2) -->
+      <div class="card animate-fade" id="paymentSimCard" style="display:none; margin-top:1.5rem;">
+        <div class="payment-sim-header">
+          <h3>💳 Secure Payment (Trader Deposit)</h3>
+          <span class="escrow-badge-sm">RBI-Compliant Escrow</span>
+        </div>
+        <div class="payment-options">
+          <label class="payment-option selected" onclick="selectPaymentMethod('upi')">
+            <input type="radio" name="payMethod" value="upi" checked>
+            <div class="payment-option-icon">📱</div>
+            <div>
+              <div class="payment-option-title">UPI Payment</div>
+              <div class="payment-option-desc">GPay, PhonePe, Paytm</div>
+            </div>
+          </label>
+          <label class="payment-option" onclick="selectPaymentMethod('bank')">
+            <input type="radio" name="payMethod" value="bank">
+            <div class="payment-option-icon">🏦</div>
+            <div>
+              <div class="payment-option-title">Bank Transfer (NEFT/RTGS)</div>
+              <div class="payment-option-desc">Direct to escrow account</div>
+            </div>
+          </label>
+        </div>
+        <div class="upi-mockup" id="upiMockup">
+          <div class="upi-amount" id="upiAmount">₹0</div>
+          <div class="upi-id">kisansetu.escrow@icicipay</div>
+          <div class="upi-note" id="upiNote">Crop escrow deposit</div>
+        </div>
+        <button class="btn btn-primary btn-lg" id="payNowBtn" onclick="simulatePayment()" style="width:100%; margin-top:1rem;">
+          🔒 Pay & Lock in Escrow
+        </button>
+      </div>
+
+      <!-- Farmer Guarantee Reassurance Box (shown for farmer) -->
+      <div class="farmer-guarantee-box animate-fade" id="farmerGuaranteeBox" style="display:none;">
+        <div class="guarantee-icon">🛡️</div>
+        <div>
+          <div class="guarantee-title">100% Escrow Payment Guarantee</div>
+          <div class="guarantee-desc" id="farmerGuaranteeText">
+            The buyer has already secured funds in KisanSetu's RBI-regulated Escrow account. Your payment is 100% guaranteed. You can safely dispatch your harvest without any fear of payment default.
+          </div>
+        </div>
+      </div>
+
+      <!-- Farmer Dispatch Action Card (Step 3 for Farmer) -->
+      <div class="dispatch-form-card animate-fade" id="farmerDispatchCard" style="display:none;">
+        <div class="dispatch-header">
+          <div>
+            <h3 style="margin:0; color:#1B4332; font-size:1.1rem;">🚚 Farmer Action: Dispatch Produce</h3>
+            <p style="margin:0.2rem 0 0 0; font-size:0.8rem; color:var(--text-muted);">Enter vehicle & transporter details to generate official KisanSetu Gate Pass & start GPS tracking</p>
+          </div>
+          <span class="challan-badge">Step 3 of 4</span>
+        </div>
+        <form onsubmit="return handleFarmerDispatch(event)">
+          <div class="dispatch-grid">
+            <div class="form-group">
+              <label class="form-label">Transport Vehicle / Truck No <span style="color:red;">*</span></label>
+              <input type="text" id="dispatchVehicle" class="form-control" placeholder="e.g. MH-15-EG-4421" required value="MH-15-EG-4421">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Driver / Transporter Name <span style="color:red;">*</span></label>
+              <input type="text" id="dispatchDriverName" class="form-control" placeholder="e.g. Santosh Shinde" required value="Santosh Shinde">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Driver Contact Number <span style="color:red;">*</span></label>
+              <input type="tel" id="dispatchDriverPhone" class="form-control" placeholder="e.g. 98220 12345" required value="98220 12345">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Origin (Farm Pickup Location)</label>
+              <input type="text" id="dispatchOrigin" class="form-control" placeholder="e.g. Pimpalgaon Farm, Nashik" value="Pimpalgaon Farm, Nashik">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%; margin-top:1rem;">
+            🚚 Mark Dispatched & Generate Official e-Way Challan
+          </button>
+        </form>
+      </div>
+
+      <!-- Farmer Official e-Way Challan & Live Dispatch Progress -->
+      <div class="eway-challan-card animate-fade" id="farmerChallanCard" style="display:none;">
+        <div class="challan-header">
+          <div>
+            <div style="font-size:0.75rem; color:#2D6A4F; font-weight:800; text-transform:uppercase;">Government APMC Compliant</div>
+            <h3 style="margin:0; font-size:1.15rem; color:#1B4332;">🌾 KisanSetu Agricultural e-Way Gate Pass</h3>
+          </div>
+          <span class="challan-badge" id="challanDocNo">KS-EWAY-88412</span>
+        </div>
+
+        <div class="challan-grid">
+          <div>
+            <div class="challan-field-label">Crop & Quantity</div>
+            <div class="challan-field-val" id="challanCrop">Onion (Nashik Red) — 1,000 kg</div>
+          </div>
+          <div>
+            <div class="challan-field-label">Buyer (Consignee)</div>
+            <div class="challan-field-val" id="challanBuyer">Kishor Agro Traders (Vashi APMC)</div>
+          </div>
+          <div>
+            <div class="challan-field-label">Vehicle Registration</div>
+            <div class="challan-field-val" id="challanVehicle">MH-15-EG-4421 (Tata Ace)</div>
+          </div>
+          <div>
+            <div class="challan-field-label">Driver Contact</div>
+            <div class="challan-field-val" id="challanDriver">Santosh Shinde · +91 98220 12345</div>
+          </div>
+          <div>
+            <div class="challan-field-label">Escrow Guarantee Status</div>
+            <div class="challan-field-val" style="color:#2D6A4F;">🔒 100% Funds Deposited in Escrow</div>
+          </div>
+          <div>
+            <div class="challan-field-label">GPS Route Status</div>
+            <div class="challan-field-val" style="color:#0284c7;">🚚 In-Transit on NH-3 (ETA: ~2 hrs)</div>
+          </div>
+        </div>
+
+        <div style="background:#F4FAF6; border-radius:8px; padding:0.75rem; font-size:0.8rem; color:#1B4332; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+          <span>📌 Show this QR / e-Way Gate Pass at APMC Checkpost</span>
+          <button class="btn btn-outline btn-sm" onclick="printChallan()">🖨️ Print / Download Gate Pass</button>
+        </div>
+      </div>
+
+      <!-- Farmer Registered Bank Account Card (for Payout) -->
+      <div class="bank-payout-box animate-fade" id="farmerBankCard" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+          <h4 style="margin:0; font-size:0.95rem; color:#1B4332;">🏦 Your Registered Bank Account (Direct Payout)</h4>
+          <span style="font-size:0.75rem; color:#2D6A4F; font-weight:700;">✅ Direct Beneficiary Transfer (DBT)</span>
+        </div>
+        <div class="bank-row">
+          <span style="color:var(--text-muted);">Bank Name</span>
+          <span style="font-weight:700;">State Bank of India (SBI)</span>
+        </div>
+        <div class="bank-row">
+          <span style="color:var(--text-muted);">Account Number</span>
+          <span style="font-weight:700;">•••• •••• •••• 4589</span>
+        </div>
+        <div class="bank-row">
+          <span style="color:var(--text-muted);">IFSC Code</span>
+          <span style="font-weight:700;">SBIN0001234</span>
+        </div>
+        <div class="bank-row">
+          <span style="color:var(--text-muted);">UPI VPA ID</span>
+          <span style="font-weight:700;">farmer.ramesh@okaxis</span>
+        </div>
+        <div class="bank-row" id="payoutStatusRow">
+          <span style="color:var(--text-muted);">Payout Status</span>
+          <span style="font-weight:700; color:#2D6A4F;" id="payoutStatusText">Pending Delivery Inspection</span>
+        </div>
+      </div>
+
+      <!-- Payment Success Animation (hidden initially) -->
+      <div class="payment-success" id="paymentSuccess" style="display:none;">
+        <div class="success-checkmark">
+          <div class="check-icon">✓</div>
+        </div>
+        <h3 id="successTitle">Payment Secured!</h3>
+        <p id="successSubtitle">Funds locked in RBI-compliant escrow vault</p>
+      </div>
+
+      <!-- Settlement Complete Section (hidden initially) -->
+      <div class="card animate-fade" id="receiptCard" style="display:none; margin-top:1.5rem;">
+        <div style="text-align:center; padding:1rem;">
+          <div style="font-size:2.5rem; margin-bottom:0.5rem;">🎉</div>
+          <h3 style="color:var(--primary); margin-bottom:0.5rem;" id="receiptTitle">Settlement Complete!</h3>
+          <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1.25rem;" id="receiptSubtitle">Funds have been released to the farmer's bank account</p>
+
+          <div class="receipt-grid" id="receiptGrid">
+            <!-- Populated by JS -->
+          </div>
+
+          <div style="display:flex; gap:0.75rem; justify-content:center; margin-top:1.5rem; flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="downloadReceipt()">📄 Download Official Receipt</button>
+            <button class="btn btn-outline" onclick="App.navigateTo(App.getUserType() === 'trader' ? 'trader-dashboard' : 'dashboard')">🏠 Back to Dashboard</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Back buttons (always visible) -->
+      <div style="display:flex; gap:0.75rem; margin-top:1.5rem; flex-wrap:wrap;" id="backButtons">
+        <a href="../offers/offers.html" class="btn btn-outline btn-sm">← Back to Offers</a>
+      </div>
+
+    </div>
+  </main>
+
+  <nav class="bottom-nav" id="bottomNav"></nav>
+
+  <!-- Firebase Compat CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics-compat.js"></script>
+  <script src="../../js/firebase-config.js"></script>
+  <script src="../../js/firebase-backend.js"></script>
+  <script src="../../js/data.js" defer></script>
+  <script src="../../js/translations.js" defer></script>
+  <script src="../../js/app.js" defer></script>
+  <script src="payment.js" defer></script>
+</body>
+</html>

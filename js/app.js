@@ -8,25 +8,38 @@ const App = {
   init() {
     this.initLocalStorage();
     this.initNavigation();
+    this.initGlobalLangListener();
     this.initLangSelector();
     this.translatePage();
     this.checkAuth();
-    this.registerServiceWorker();
-    this.initPWAInstall();
-    this.initConnectivityDetection();
+    // Defer non-critical init for faster first paint
+    const deferInit = () => {
+      this.registerServiceWorker();
+      this.initPWAInstall();
+      this.initConnectivityDetection();
+    };
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(deferInit);
+    } else {
+      setTimeout(deferInit, 100);
+    }
   },
 
   // ── Service Worker Registration ──────────────────
   registerServiceWorker() {
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        const swPath = this.getBasePath() + 'sw.js';
-        navigator.serviceWorker.register(swPath).then(reg => {
+      const doRegister = () => {
+        navigator.serviceWorker.register('/sw.js', { scope: '/' }).then(reg => {
           console.log('[KisanSetu] SW registered:', reg.scope);
         }).catch(err => {
           console.warn('[KisanSetu] SW registration failed:', err);
         });
-      });
+      };
+      if (document.readyState === 'complete') {
+        doRegister();
+      } else {
+        window.addEventListener('load', doRegister);
+      }
     }
   },
 
@@ -149,6 +162,9 @@ const App = {
 
   setLang(lang) {
     localStorage.setItem('kisansetu_lang', lang);
+    document.querySelectorAll('.lang-dropdown').forEach(sel => {
+      sel.value = lang;
+    });
     this.translatePage();
     // Also trigger custom event if pages need to re-render dynamic parts
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
@@ -294,7 +310,8 @@ const App = {
       'offers': base + 'pages/offers/offers.html',
       'trader-dashboard': base + 'pages/trader-dashboard/trader-dashboard.html',
       'profile': base + 'pages/profile/profile.html',
-      'community': base + 'pages/community/community.html'
+      'community': base + 'pages/community/community.html',
+      'payment': base + 'pages/payment/payment.html'
     };
     return routes[page] || routes['home'];
   },
@@ -315,6 +332,7 @@ const App = {
     if (path.includes('/trader-dashboard/')) return 'trader-dashboard';
     if (path.includes('/profile/')) return 'profile';
     if (path.includes('/community/')) return 'community';
+    if (path.includes('/payment/')) return 'payment';
     return 'home';
   },
 
@@ -355,6 +373,7 @@ const App = {
 
     this.updateNavUser();
     this.updateNotifBadge();
+    this.initLangSelector();
   },
 
   updateNavUser() {
@@ -381,9 +400,62 @@ const App = {
     });
   },
 
-  // ── Language Selector ─────────────────────────────
+  // ── Language Selector (22 Scheduled Languages) ────
+  ACTIVE_LANGS: ['en', 'hi', 'mr'],
+  ALL_LANGS: [
+    { code: 'en', label: 'English', native: 'English' },
+    { code: 'hi', label: 'Hindi', native: 'हिंदी' },
+    { code: 'mr', label: 'Marathi', native: 'मराठी' },
+    { code: 'bn', label: 'Bengali', native: 'বাংলা' },
+    { code: 'te', label: 'Telugu', native: 'తెలుగు' },
+    { code: 'ta', label: 'Tamil', native: 'தமிழ்' },
+    { code: 'gu', label: 'Gujarati', native: 'ગુજરાતી' },
+    { code: 'ur', label: 'Urdu', native: 'اردو' },
+    { code: 'kn', label: 'Kannada', native: 'ಕನ್ನಡ' },
+    { code: 'or', label: 'Odia', native: 'ଓଡ଼ିଆ' },
+    { code: 'ml', label: 'Malayalam', native: 'മലയാളം' },
+    { code: 'pa', label: 'Punjabi', native: 'ਪੰਜਾਬੀ' },
+    { code: 'as', label: 'Assamese', native: 'অসমীয়া' },
+    { code: 'mai', label: 'Maithili', native: 'मैथिली' },
+    { code: 'sat', label: 'Santali', native: 'ᱥᱟᱱᱛᱟᱲᱤ' },
+    { code: 'ks', label: 'Kashmiri', native: 'کٲشُر' },
+    { code: 'ne', label: 'Nepali', native: 'नेपाली' },
+    { code: 'sd', label: 'Sindhi', native: 'سنڌي' },
+    { code: 'kok', label: 'Konkani', native: 'कोंकणी' },
+    { code: 'doi', label: 'Dogri', native: 'डोगरी' },
+    { code: 'mni', label: 'Manipuri', native: 'মৈতৈলোন্' },
+    { code: 'brx', label: 'Bodo', native: 'बड़ो' },
+    { code: 'sa', label: 'Sanskrit', native: 'संस्कृतम्' }
+  ],
+
+  _langDelegated: false,
+  initGlobalLangListener() {
+    if (this._langDelegated) return;
+    this._langDelegated = true;
+    document.addEventListener('change', (e) => {
+      const target = e.target;
+      if (target && target.classList && target.classList.contains('lang-dropdown')) {
+        const lang = target.value;
+        if (App.ACTIVE_LANGS.includes(lang)) {
+          App.setLang(lang);
+          const match = App.ALL_LANGS.find(l => l.code === lang);
+          App.showNotification('Language / भाषा', `${match ? match.native : lang}`, 'info');
+        } else {
+          const match = App.ALL_LANGS.find(l => l.code === lang);
+          App.showNotification('🚧 Coming Soon', `${match ? match.native + ' (' + match.label + ')' : lang} — Available in English, हिंदी, मराठी`, 'warning');
+          target.value = App.getLang(); // revert
+        }
+      }
+    });
+  },
+
   initLangSelector() {
     const currentLang = this.getLang();
+    // Sync all dropdown selects to active language
+    document.querySelectorAll('.lang-dropdown').forEach(sel => {
+      sel.value = currentLang;
+    });
+    // Legacy button support
     document.querySelectorAll('.lang-btn').forEach(btn => {
       const btnLang = btn.getAttribute('data-lang');
       btn.classList.toggle('active', btnLang === currentLang);
@@ -673,13 +745,20 @@ function renderTopNav(userType) {
   const avatar = user ? (user.avatar || name.charAt(0)) : 'U';
   const currentLang = App.getLang();
 
+  const langOptions = App.ALL_LANGS.map(l => {
+    const isActive = App.ACTIVE_LANGS.includes(l.code);
+    const suffix = isActive ? '' : ' (Coming Soon)';
+    const disabled = isActive ? '' : 'disabled';
+    return `<option value="${l.code}" ${l.code === currentLang ? 'selected' : ''} ${disabled}>${l.native} — ${l.label}${suffix}</option>`;
+  }).join('');
+
   return `
     <a href="${base}index.html" class="nav-logo">🌾 Kisan<span>Setu</span></a>
     <div class="nav-actions">
       <div class="lang-selector">
-        <button class="lang-btn ${currentLang === 'en' ? 'active' : ''}" data-lang="en">EN</button>
-        <button class="lang-btn ${currentLang === 'hi' ? 'active' : ''}" data-lang="hi">हिं</button>
-        <button class="lang-btn ${currentLang === 'mr' ? 'active' : ''}" data-lang="mr">मरा</button>
+        <select class="lang-dropdown" aria-label="Select Language">
+          ${langOptions}
+        </select>
       </div>
       <div class="nav-user" onclick="App.navigateTo('profile')">
         <div class="nav-avatar">${avatar}</div>
@@ -689,5 +768,9 @@ function renderTopNav(userType) {
   `;
 }
 
-// Auto-init on DOM ready
-document.addEventListener('DOMContentLoaded', () => App.init());
+// Auto-init on DOM ready or immediately if DOM is already parsed
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => App.init());
+} else {
+  App.init();
+}

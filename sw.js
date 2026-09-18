@@ -3,25 +3,35 @@
    Cache static assets, handle offline, background sync
    ═══════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'kisansetu-v1';
-const STATIC_CACHE = 'kisansetu-static-v1';
-const DATA_CACHE = 'kisansetu-data-v1';
+const CACHE_NAME = 'kisansetu-v2';
+const STATIC_CACHE = 'kisansetu-static-v2';
+const DATA_CACHE = 'kisansetu-data-v2';
 
 // Static assets to pre-cache on install
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/css/style.css',
-  '/js/app.js',
+  '/manifest.json',
+  '/js/crop-icons.js',
   '/js/data.js',
   '/js/translations.js',
-  '/js/crop-icons.js',
   '/js/ai-engine.js',
   '/js/mandi-api.js',
   '/js/blockchain.js',
   '/js/govt-schemes.js',
   '/js/weather.js',
-  '/manifest.json',
+  '/js/firebase-config.js',
+  '/js/firebase-backend.js',
+  '/js/app.js',
+  '/assets/icons/icon-72.png',
+  '/assets/icons/icon-96.png',
+  '/assets/icons/icon-128.png',
+  '/assets/icons/icon-144.png',
+  '/assets/icons/icon-152.png',
+  '/assets/icons/icon-192.png',
+  '/assets/icons/icon-384.png',
+  '/assets/icons/icon-512.png',
   '/pages/dashboard/dashboard.html',
   '/pages/dashboard/dashboard.css',
   '/pages/dashboard/dashboard.js',
@@ -37,11 +47,21 @@ const STATIC_ASSETS = [
   '/pages/traders/traders.html',
   '/pages/traders/traders.css',
   '/pages/traders/traders.js',
+  '/pages/payment/payment.html',
+  '/pages/payment/payment.css',
+  '/pages/payment/payment.js',
   '/pages/profile/profile.html',
+  '/pages/profile/profile.css',
   '/pages/profile/profile.js',
   '/pages/login/login.html',
+  '/pages/login/login.css',
+  '/pages/login/login.js',
   '/pages/register/register.html',
+  '/pages/register/register.css',
+  '/pages/register/register.js',
   '/pages/trader-dashboard/trader-dashboard.html',
+  '/pages/trader-dashboard/trader-dashboard.css',
+  '/pages/trader-dashboard/trader-dashboard.js',
   '/pages/community/community.html',
   '/pages/community/community.css',
   '/pages/community/community.js'
@@ -52,14 +72,13 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(STATIC_CACHE).then((cache) => {
       console.log('[SW] Pre-caching static assets');
-      // Use addAll with catch so one missing file doesn't break install
-      return cache.addAll(STATIC_ASSETS).catch((err) => {
-        console.warn('[SW] Some assets failed to cache:', err);
-        // Cache what we can individually
-        return Promise.allSettled(
-          STATIC_ASSETS.map(url => cache.add(url).catch(() => {}))
-        );
-      });
+      return Promise.allSettled(
+        STATIC_ASSETS.map((url) =>
+          cache.add(url).catch((err) => {
+            console.warn('[SW] Cache failed for:', url, err);
+          })
+        )
+      );
     })
   );
   self.skipWaiting();
@@ -161,7 +180,6 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncOfflineCrops() {
-  // Read from IndexedDB queue and push to server
   console.log('[SW] Syncing offline crop submissions...');
 }
 
@@ -169,7 +187,7 @@ async function syncOfflineOffers() {
   console.log('[SW] Syncing offline offer actions...');
 }
 
-// Push Notifications (future)
+// Push Notifications
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};
   const title = data.title || '🌾 KisanSetu';

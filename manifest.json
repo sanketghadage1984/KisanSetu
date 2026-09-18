@@ -1,7 +1,9 @@
 {
-  "name": "KisanSetu",
+  "name": "KisanSetu — Digital Agriculture Bridge",
   "short_name": "KisanSetu",
   "description": "Digital bridge between farmers and traders — Find the best trader, get a fair price for your crops.",
+  "id": "/",
+  "scope": "/",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#F5F7F5",
@@ -12,70 +14,69 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "assets/icons/icon-72.png",
+      "src": "/assets/icons/icon-72.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-96.png",
+      "src": "/assets/icons/icon-96.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-128.png",
+      "src": "/assets/icons/icon-128.png",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-144.png",
+      "src": "/assets/icons/icon-144.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-152.png",
+      "src": "/assets/icons/icon-152.png",
       "sizes": "152x152",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-192.png",
+      "src": "/assets/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-384.png",
+      "src": "/assets/icons/icon-384.png",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-512.png",
+      "src": "/assets/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [],
   "shortcuts": [
     {
       "name": "Dashboard",
       "url": "/pages/dashboard/dashboard.html",
-      "icons": [{ "src": "assets/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Market Prices",
       "url": "/pages/market/market.html",
-      "icons": [{ "src": "assets/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Add Crop",
       "url": "/pages/add-crop/add-crop.html",
-      "icons": [{ "src": "assets/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     }
   ]
 }

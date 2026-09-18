@@ -234,7 +234,10 @@ async function acceptOffer(offerId) {
     renderOffers();
 
     await BackendService.acceptOffer(offerId, offer);
-    App.showNotification('Deal Accepted! 🎉', `${offer.cropName} deal confirmed!`, 'success');
+    App.showNotification('Deal Accepted! 🎉', `${offer.cropName} deal confirmed! Opening Payout Hub...`, 'success');
+    setTimeout(() => {
+      window.location.href = `../payment/payment.html?offerId=${offerId}&role=farmer`;
+    }, 1000);
   } catch (err) {
     console.error('acceptOffer error:', err);
     App.showNotification('Error', 'Failed to accept offer. Try again.', 'error');
@@ -447,6 +450,10 @@ function renderEscrowAndLogistics(offer, userType) {
             🔄 Reset Demo Flow
           </button>
         ` : ''}
+
+        <a href="../payment/payment.html?offerId=${offer.id}&role=${userType}" class="btn btn-accent btn-sm" style="margin-left:auto; display:inline-flex; align-items:center; gap:0.35rem;">
+          💳 Open Dedicated ${userType === 'trader' ? 'Escrow Deposit' : 'Farmer Payout'} Hub →
+        </a>
       </div>
 
       <!-- Logistics GPS Tracking Simulator -->
